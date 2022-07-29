@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
+  companyName: Nope
   productName: SerialAnchor
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -616,14 +616,14 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: Template3D
+  metroPackageName: SerialAnchorPackage
   metroPackageVersion: 1.0.0.0
   metroCertificatePath: Assets\WSATestCertificate.pfx
   metroCertificatePassword: 
   metroCertificateSubject: DefaultCompany
   metroCertificateIssuer: DefaultCompany
   metroCertificateNotAfter: 80afdb26effed801
-  metroApplicationDescription: Template_3D
+  metroApplicationDescription: Trials to serialize anchors
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
