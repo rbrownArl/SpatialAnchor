@@ -22,8 +22,7 @@
 
 # Visual Studio cache directory
 .vs/
-
-# Root VS project
+.vsconfig
 /*.csproj
 
 # Gradle cache directory
