@@ -20,7 +20,8 @@ using System.Net;
 public class TcpConnection
 {
     public delegate void TcpMessage(byte[] data);
-    public event TcpMessage TcpMessageEvent;
+    public event TcpMessage TcpRecieveEvent;
+    public event TcpMessage TcpSendCompleteEvent;
 
     private string port;
 
@@ -34,7 +35,7 @@ public class TcpConnection
 
     public TcpConnection(string port)
     {
-        TcpMessageEvent += filler;
+        TcpRecieveEvent += filler;
         StartServer(port);
     }
 
@@ -73,13 +74,14 @@ public class TcpConnection
             await dr.LoadAsync((uint)message_size);
             dr.ReadBytes(anchorReceive);
 
-            TcpMessageEvent(anchorReceive);
+            TcpRecieveEvent(anchorReceive);
         }
     }
 #endif
 
 
-    public async void SendAnchor(string address)
+    //public async void SendAnchor(string address)
+    public async void SendAnchor(string address, byte[] dataSend)
     {
 #if !UNITY_EDITOR
         try
@@ -91,9 +93,10 @@ public class TcpConnection
 
                 using (var dw = new DataWriter(streamSocket.OutputStream))
                 {
-                    dw.WriteBytes(Combine(BitConverter.GetBytes(anchorSend.Length), anchorSend));
+                    dw.WriteBytes(Combine(BitConverter.GetBytes(dataSend.Length), dataSend));
                     await dw.StoreAsync();
                     dw.DetachStream();
+                    TcpSendCompleteEvent(BitConverter.GetBytes((UInt32)dataSend.Length));
                 }
             }
         }
@@ -173,7 +176,7 @@ public class TcpConnection
                     await dr.LoadAsync((uint)message_size);
                     dr.ReadBytes(anchorReceive);
 
-                    TcpMessageEvent(anchorReceive);
+                    TcpRecieveEvent(anchorReceive);
                 }
             }
 
