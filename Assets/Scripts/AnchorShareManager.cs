@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -45,11 +46,20 @@ public class AnchorShareManager : MonoBehaviour
     List<byte[]> receivedMessages = null;
     //byte[] importedAnchor = null;
 
+    enum MessageType : UInt32
+    {
+        SendIp       = 0x4321,
+        SendPos      = 0x7EE7,
+        SendAnchor   = 0xBEEF,
+        DoneAnchor   = 0xDEAD,
+        CancelAnchor = 0x0000
+    }
+
     enum ImportState : int
     {
-        NoImport = 0,
-        StartImport = 1,
-        Importing = 2,
+        NoImport      = 0,
+        StartImport   = 1,
+        Importing     = 2,
         DoneImporting = 3
     }
 
@@ -73,10 +83,10 @@ public class AnchorShareManager : MonoBehaviour
         receivedMessages = new List<byte[]>();
 
         ips = new HashSet<string>();
-        readIpThread = new Thread(new ThreadStart(IpListener));
+        readIpThread = new Thread(new ThreadStart(UdpListener));
         readIpThread.Start();
 
-        StartCoroutine("IpBroadcastOnce");
+        StartCoroutine("IpBroadcast");
         //IpBroadcastOnce();
     }
 
@@ -95,7 +105,7 @@ public class AnchorShareManager : MonoBehaviour
     }
 
 
-    private IEnumerator IpBroadcastOnce()
+    private IEnumerator IpBroadcast()
     //private void IpBroadcastOnce()
     {
         if (machineIp == null)
@@ -103,52 +113,91 @@ public class AnchorShareManager : MonoBehaviour
             DebugWindow.DebugMessage("No IP");
             yield return null;
         }
-        DebugWindow.DebugMessage("Broadcast Pre");
-
+        
         yield return new WaitForSeconds(2.0f);
         DebugWindow.DebugMessage("IpBroadcast");
 
-        byte[] bytes = Encoding.UTF8.GetBytes(machineIp);
+        byte[] bytes = MessageTypeToBytes(MessageType.SendIp);
+        AppendBytes(ref bytes, Encoding.UTF8.GetBytes(machineIp));
 
-        udpBroadcast.SendMulticastUdpData(ipPort, Encoding.UTF8.GetBytes(machineIp));
+        //udpBroadcast.SendMulticastUdpData(ipPort, Encoding.UTF8.GetBytes(machineIp));
+        udpBroadcast.SendMulticastUdpData(ipPort, bytes);
 
-        yield return new WaitForSeconds(28.0f);
-        DebugWindow.DebugMessage("Broadcast Post");
-        StartCoroutine("IpBroadcastOnce");
+        yield return new WaitForSeconds(58.0f);
+        StartCoroutine("IpBroadcast");
     }
 
-    private void IpListener()
+    private void BroadcastPosOnce()
+    {
+        Vector3 pos = new Vector3(1, 2, 3);
+
+        DebugWindow.DebugMessage("Send Pos");
+        byte[] bytes = MessageTypeToBytes(MessageType.SendPos);
+        AppendBytes(ref bytes, Vector3ToBytes(pos));
+
+        udpBroadcast.SendMulticastUdpData(ipPort, bytes);
+    }
+
+    private void UdpListener()
     {
         byte[] receivedBytes = null;
-        string receivedIp = null;
+        byte[] receivedMessage = null;
 
-        DebugWindow.DebugMessage("IpListener");
         while (true)
         {
             try
             {
                 receivedBytes = udpBroadcast.ReceiveUdpData(ipPort);
 
-                receivedIp = Encoding.UTF8.GetString(receivedBytes);
-                IPAddress.Parse(receivedIp);
+                MessageType messageType = (MessageType)BitConverter.ToUInt32(receivedBytes, 0);
 
-                if (receivedIp != machineIp)
+                receivedMessage = receivedBytes.Skip(4).ToArray();
+
+                switch (messageType)
                 {
-                    if (!ips.Contains(receivedIp))
-                    {
-                        ips.Add(receivedIp);
-                        DebugWindow.DebugMessage("Known IPs");
-                        foreach (string ip in ips)
-                        {
-                            DebugWindow.DebugMessage("  " + ip);
-                        }
-                        IpBroadcastOnce();
-                    }
+                    case MessageType.SendIp:
+                        UpdateIps(messageType, receivedMessage);
+                        break;
+                    case MessageType.SendPos:
+                        UpdatePos(messageType, receivedMessage);
+                        break;
                 }
             }
-            catch (Exception e)
+            catch(Exception e)
             {
-                DebugWindow.DebugMessage("IpListener: " + e);
+                DebugWindow.DebugMessage("UdpListener: " + e);
+            }
+        }
+    }
+    
+    private void UpdatePos(MessageType messageType, byte[] posBytes)
+    {
+        Vector3 pos = BytesToVector3(posBytes);
+
+        DebugWindow.DebugMessage(messageType.ToString() + ": " + pos.ToString());
+
+
+    }
+
+    private void UpdateIps(MessageType messageType, byte[] ipBytes)
+    {
+        string ipString = Encoding.UTF8.GetString(ipBytes);
+
+        DebugWindow.DebugMessage(messageType.ToString() + ": " + ipString);
+
+        IPAddress.Parse(ipString);
+
+        if (ipString != machineIp)
+        {
+            if (!ips.Contains(ipString))
+            {
+                ips.Add(ipString);
+                DebugWindow.DebugMessage("Known IPs");
+                foreach (string ip in ips)
+                {
+                    DebugWindow.DebugMessage("  " + ip);
+                }
+                IpBroadcast();
             }
         }
     }
@@ -176,11 +225,15 @@ public class AnchorShareManager : MonoBehaviour
             GameObject defaultObject = Instantiate(prefab, new Vector3(0f, 0f, 0.75f), Quaternion.identity);
             defaultObject.name = gameObjectName;
             defaultObject.GetComponent<MoveMe>().anchorManager = thisAnchorManager;
+            BroadcastPosOnce();
 
             return defaultObject;
         }
         else
+        {
+            BroadcastPosOnce();
             return existing;
+        }
 
     }
 
@@ -383,6 +436,11 @@ public class AnchorShareManager : MonoBehaviour
         }
     }
 
+    private byte[] MessageTypeToBytes(MessageType message)
+    {
+        return BitConverter.GetBytes((UInt32)message);
+    }
+
     private void AppendBytes(ref byte[] b1, byte[] b2)
     {
         byte[] b3 = new byte[b1.Length + b2.Length];
@@ -391,6 +449,26 @@ public class AnchorShareManager : MonoBehaviour
         b2.CopyTo(b3, b1.Length);
 
         b1 = b3;
+    }
+
+    private byte[] Vector3ToBytes(Vector3 vect)
+    {
+        byte[] buff = new byte[sizeof(float) * 3];
+        Buffer.BlockCopy(BitConverter.GetBytes(vect.x), 0, buff, 0 * sizeof(float), sizeof(float));
+        Buffer.BlockCopy(BitConverter.GetBytes(vect.y), 0, buff, 1 * sizeof(float), sizeof(float));
+        Buffer.BlockCopy(BitConverter.GetBytes(vect.z), 0, buff, 2 * sizeof(float), sizeof(float));
+
+        return buff;
+    }
+
+    private Vector3 BytesToVector3(byte[] bytes)
+    {
+        Vector3 vect = Vector3.zero;
+        vect.x = BitConverter.ToSingle(bytes, 0 * sizeof(float));
+        vect.y = BitConverter.ToSingle(bytes, 1 * sizeof(float));
+        vect.z = BitConverter.ToSingle(bytes, 2 * sizeof(float));
+
+        return vect;
     }
 
     private string getMachineIp()
