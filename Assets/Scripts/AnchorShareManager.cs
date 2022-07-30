@@ -40,9 +40,10 @@ public class AnchorShareManager : MonoBehaviour
     public string targetIp;
 
     private UdpConnection udpBroadcast = null;
-    private TcpConnection tcpConnection = null;
+    private TcpConnection tcpListener = null;
 
-    byte[] importedAnchor = null;
+    List<byte[]> receivedMessages = null;
+    //byte[] importedAnchor = null;
 
     enum ImportState : int
     {
@@ -66,15 +67,17 @@ public class AnchorShareManager : MonoBehaviour
         WorldAnchorStore.GetAsync(AnchorStoreLoaded);
 
         udpBroadcast = new UdpConnection();
-        tcpConnection = new TcpConnection(anchorPort.ToString());
-        tcpConnection.TcpRecieveEvent += TcpMessageReceivedEvent;
-        tcpConnection.TcpSendCompleteEvent += TcpMessageSentEvent;
+        tcpListener = new TcpConnection(anchorPort.ToString());
+        tcpListener.TcpReceiveEvent += TcpMessageReceivedEvent;
+
+        receivedMessages = new List<byte[]>();
 
         ips = new HashSet<string>();
         readIpThread = new Thread(new ThreadStart(IpListener));
         readIpThread.Start();
 
-        IpBroadcastOnce();
+        StartCoroutine("IpBroadcastOnce");
+        //IpBroadcastOnce();
     }
 
     // Update is called once per frame
@@ -82,23 +85,36 @@ public class AnchorShareManager : MonoBehaviour
     {
         if (importState == ImportState.StartImport)
         {
-            ImportAnchor(importedAnchor);
+            DebugWindow.DebugMessage("ImportState StartImport");
+            //ImportAnchor(importedAnchor);
+            ImportAnchor(receivedMessages[0]);
+            receivedMessages.RemoveAt(0);
         }
+
+
     }
 
 
-    private void IpBroadcastOnce()
+    private IEnumerator IpBroadcastOnce()
+    //private void IpBroadcastOnce()
     {
-        DebugWindow.DebugMessage("IpBroadcast");
-
         if (machineIp == null)
         {
             DebugWindow.DebugMessage("No IP");
-            return;
+            yield return null;
         }
+        DebugWindow.DebugMessage("Broadcast Pre");
+
+        yield return new WaitForSeconds(2.0f);
+        DebugWindow.DebugMessage("IpBroadcast");
+
         byte[] bytes = Encoding.UTF8.GetBytes(machineIp);
 
         udpBroadcast.SendMulticastUdpData(ipPort, Encoding.UTF8.GetBytes(machineIp));
+
+        yield return new WaitForSeconds(28.0f);
+        DebugWindow.DebugMessage("Broadcast Post");
+        StartCoroutine("IpBroadcastOnce");
     }
 
     private void IpListener()
@@ -140,7 +156,9 @@ public class AnchorShareManager : MonoBehaviour
     public void TcpMessageReceivedEvent(byte[] data) 
     {
         DebugWindow.DebugMessage("Got anchor?" + data.Length);
-        importedAnchor = tcpConnection.anchorReceive;
+        receivedMessages.Add(data);
+        //ImportAnchor(data);
+        //importedAnchor = data;
         importState = ImportState.StartImport;
     }
 
@@ -285,9 +303,17 @@ public class AnchorShareManager : MonoBehaviour
 
                 string path = string.Format("{0}/{1}.bin", Application.persistentDataPath, anchorId + "-serializedTransferAnchor.bin");
                 File.WriteAllBytes(path, serializedWorldAnchor);
+
                 foreach (string ip in ips)
                 {
-                    tcpConnection.SendAnchor(ip, serializedWorldAnchor);
+                    void OnTcpMessageSent(byte[] data)
+                    {
+                        DebugWindow.DebugMessage("Tcp Send complete " + BitConverter.ToUInt32(data, 0));
+                    }
+
+                    TcpConnection tcpSender = new TcpConnection();
+                    tcpSender.TcpSendCompleteEvent += OnTcpMessageSent;
+                    tcpSender.SendAnchor(ip, anchorPort.ToString(), serializedWorldAnchor);
                 }
             }
             else

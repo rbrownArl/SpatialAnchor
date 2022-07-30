@@ -64,7 +64,7 @@ public class UdpConnection
             client.EnableBroadcast = true;
             client.MulticastLoopback = false; //not working.  does it have to be save client?
 
-            DebugWindow.DebugMessage("Sending data");
+            DebugWindow.DebugMessage("Sending UDP data");
             client.Send(data, data.Length, sendEP);
 
             client.Close();
@@ -83,14 +83,14 @@ public class UdpConnection
 
         try
         {
-            DebugWindow.DebugMessage("Listening");
+            DebugWindow.DebugMessage("Listening Udp");
 
             data = client.Receive(ref anyEp);
 
         }
         catch (Exception e)
         {
-            DebugWindow.DebugMessage("Receive Data " + e.ToString());
+            DebugWindow.DebugMessage("Receive UDP Data " + e.ToString());
         }
         finally
         {
@@ -99,38 +99,5 @@ public class UdpConnection
 
         return data;
     }
-
-/*    public void SendUdpData(IPAddress ip, int port, byte[] data)
-    {
-        IPEndPoint remoteEndPoint = new IPEndPoint(ip, port);
-        UdpClient sender = new UdpClient();
-
-        try
-        {
-            sender.MulticastLoopback = false;
-            sender.DontFragment = true;
-
-            int sent = sender.Send(data, data.Length, remoteEndPoint);
-        }
-        catch (Exception e)
-        {
-            DebugWindow.DebugMessage("SendData " + e.ToString());
-        }
-        finally
-        {
-            sender.Close();
-        }
-    }*/
-
-/*
-    public void SendData(IPAddress ip, int port, byte[] data)
-    {
-        SendUdpData(ip, port, data);
-    }
-
-    public byte[] ReceiveData(int port)
-    {
-        return ReceiveUdpData(port);
-    }*/
 
 }
