@@ -40,7 +40,7 @@ public class AnchorShareManager : MonoBehaviour
 
     public string targetIp;
 
-    private UdpConnection udpBroadcast = null;
+    private UdpListener udpListener = null;
     private TcpConnection tcpListener = null;
 
     List<byte[]> receivedMessages = null;
@@ -76,7 +76,7 @@ public class AnchorShareManager : MonoBehaviour
         //read WorldAnchorTransferBatch for existing anchors
         WorldAnchorStore.GetAsync(AnchorStoreLoaded);
 
-        udpBroadcast = new UdpConnection();
+        udpListener = new UdpListener();
         tcpListener = new TcpConnection(anchorPort.ToString());
         tcpListener.TcpReceiveEvent += TcpMessageReceivedEvent;
 
@@ -121,7 +121,7 @@ public class AnchorShareManager : MonoBehaviour
         AppendBytes(ref bytes, Encoding.UTF8.GetBytes(machineIp));
 
         //udpBroadcast.SendMulticastUdpData(ipPort, Encoding.UTF8.GetBytes(machineIp));
-        udpBroadcast.SendMulticastUdpData(ipPort, bytes);
+        new UdpBroadcastData(ipPort, bytes);
 
         yield return new WaitForSeconds(58.0f);
         StartCoroutine("IpBroadcast");
@@ -135,7 +135,7 @@ public class AnchorShareManager : MonoBehaviour
         byte[] bytes = MessageTypeToBytes(MessageType.SendPos);
         AppendBytes(ref bytes, Vector3ToBytes(pos));
 
-        udpBroadcast.SendMulticastUdpData(ipPort, bytes);
+        new UdpBroadcastData(ipPort, bytes);
     }
 
     private void UdpListener()
@@ -147,7 +147,7 @@ public class AnchorShareManager : MonoBehaviour
         {
             try
             {
-                receivedBytes = udpBroadcast.ReceiveUdpData(ipPort);
+                receivedBytes = udpListener.ReceiveUdpData(ipPort);
 
                 MessageType messageType = (MessageType)BitConverter.ToUInt32(receivedBytes, 0);
 
