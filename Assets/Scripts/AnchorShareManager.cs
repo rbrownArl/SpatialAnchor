@@ -50,6 +50,8 @@ public class AnchorShareManager : MonoBehaviour
     {
         SendIp       = 0x4321,
         SendPos      = 0x7EE7,
+        ClaimAnchor  = 0xB00B,
+        ReleaseAnchor= 0xFFEE,
         SendAnchor   = 0xBEEF,
         DoneAnchor   = 0xDEAD,
         CancelAnchor = 0x0000
@@ -156,10 +158,16 @@ public class AnchorShareManager : MonoBehaviour
                 switch (messageType)
                 {
                     case MessageType.SendIp:
-                        UpdateIps(messageType, receivedMessage);
+                        OnUpdateIps(messageType, receivedMessage);
                         break;
                     case MessageType.SendPos:
-                        UpdatePos(messageType, receivedMessage);
+                        OnUpdatePos(messageType, receivedMessage);
+                        break;
+                    case MessageType.ClaimAnchor:
+                        OnClaimAnchor(messageType, receivedMessage);
+                        break;
+                    case MessageType.ReleaseAnchor:
+                        OnReleaseAnchor(messageType, receivedMessage);
                         break;
                 }
             }
@@ -170,7 +178,7 @@ public class AnchorShareManager : MonoBehaviour
         }
     }
     
-    private void UpdatePos(MessageType messageType, byte[] posBytes)
+    private void OnUpdatePos(MessageType messageType, byte[] posBytes)
     {
         Vector3 pos = BytesToVector3(posBytes);
 
@@ -179,7 +187,7 @@ public class AnchorShareManager : MonoBehaviour
 
     }
 
-    private void UpdateIps(MessageType messageType, byte[] ipBytes)
+    private void OnUpdateIps(MessageType messageType, byte[] ipBytes)
     {
         string ipString = Encoding.UTF8.GetString(ipBytes);
 
@@ -200,6 +208,34 @@ public class AnchorShareManager : MonoBehaviour
                 IpBroadcast();
             }
         }
+    }
+
+    private void OnClaimAnchor(MessageType messageType, byte[] bytes)
+    {
+        int anchorNameLength = (int)bytes[0]; ;
+        int sourceIpLength = (int)bytes[anchorNameLength];
+
+        byte[] anchorNameBytes = bytes.Skip(0).Take(anchorNameLength).ToArray();
+        byte[] sourceIpBytes = bytes.Skip(anchorNameLength).Take(sourceIpLength).ToArray();
+
+        string anchorName = Encoding.UTF8.GetString(anchorNameBytes);
+        string sourceIp = Encoding.UTF8.GetString(sourceIpBytes);
+
+        DebugWindow.DebugMessage(sourceIp + " has claimed anchor " + anchorName);
+    }
+
+    private void OnReleaseAnchor(MessageType messageType, byte[] bytes)
+    {
+        int anchorNameLength = (int)bytes[0]; ;
+        int sourceIpLength = (int)bytes[anchorNameLength];
+
+        byte[] anchorNameBytes = bytes.Skip(0).Take(anchorNameLength).ToArray();
+        byte[] sourceIpBytes = bytes.Skip(anchorNameLength).Take(sourceIpLength).ToArray();
+
+        string anchorName = Encoding.UTF8.GetString(anchorNameBytes);
+        string sourceIp = Encoding.UTF8.GetString(sourceIpBytes);
+
+        DebugWindow.DebugMessage(sourceIp + " has released anchor " + anchorName);
     }
 
     public void TcpMessageReceivedEvent(byte[] data) 
@@ -237,8 +273,38 @@ public class AnchorShareManager : MonoBehaviour
 
     }
 
+
+
+    public void ClaimAnchor(GameObject anchoredObject)
+    {
+        byte[] bytes = MessageTypeToBytes(MessageType.ClaimAnchor);
+        AppendBytes(ref bytes, new byte[] { (byte)anchoredObject.name.Length });
+        AppendBytes(ref bytes, Encoding.UTF8.GetBytes(anchoredObject.name));
+        AppendBytes(ref bytes, new byte[] { (byte)machineIp.Length });
+        AppendBytes(ref bytes, Encoding.UTF8.GetBytes(machineIp));
+
+        //Broadcast that we claimed the anchor
+        new UdpBroadcastData(ipPort, bytes);
+    }
+
+    public void ReleaseAnchor(GameObject anchoredObject)
+    {
+        //Broadcast the we released the anchor?  
+        byte[] bytes = MessageTypeToBytes(MessageType.ReleaseAnchor);
+        AppendBytes(ref bytes, new byte[] { (byte)anchoredObject.name.Length });
+        AppendBytes(ref bytes, Encoding.UTF8.GetBytes(anchoredObject.name));
+        AppendBytes(ref bytes, new byte[] { (byte)machineIp.Length });
+        AppendBytes(ref bytes, Encoding.UTF8.GetBytes(machineIp));
+
+        //Broadcast that we claimed the anchor
+        new UdpBroadcastData(ipPort, bytes);
+    }
+
     public void MoveAnchorObject(GameObject anchoredObject)
     {
+        //Claim the anchor from other users
+        ClaimAnchor(anchoredObject);
+
         //Destroy the unity world anchor attached to anchoredObject
         ClearAnchor(anchoredObject);
     }
@@ -252,6 +318,9 @@ public class AnchorShareManager : MonoBehaviour
         //Export anchor
         //Broadcast updated anchor
         ExportAnchor(anchoredObject.name, anchoredObject.GetComponent<WorldAnchor>());
+
+        //Release the anchor back to other users
+        ReleaseAnchor(anchoredObject);
     }
 
     private void AnchorStoreLoaded(WorldAnchorStore store)
