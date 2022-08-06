@@ -14,6 +14,7 @@ public class MoveMe : MonoBehaviour
     public Material selectedColor;
     public Material originalColor;
     public Material lostColor;
+    public Material lockedColor;
 
     public AnchorShareManager anchorManager;
     private WorldAnchor anchor;
@@ -59,6 +60,16 @@ public class MoveMe : MonoBehaviour
         gameObject.GetComponent<Renderer>().material = originalColor;
 
         anchorManager.LockAnchorObject(gameObject);
+    }
+
+    public void OnClaimed()
+    {
+        gameObject.GetComponent<Renderer>().material = lockedColor;
+    }
+
+    public void OnReleased()
+    {
+        gameObject.GetComponent<Renderer>().material = originalColor;
     }
 
     private void Anchor_OnTrackingChanged(WorldAnchor self, bool located)

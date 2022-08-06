@@ -233,11 +233,11 @@ public class TcpSend
     {
         TcpSendCompleteEvent += filler;
 
-        SendAnchor(address, port, dataSend);
+        SendData(address, port, dataSend);
     }
 
 
-    public async void SendAnchor(string address, string port, byte[] dataSend)
+    public async void SendData(string address, string port, byte[] dataSend)
     {
 #if !UNITY_EDITOR
         try
@@ -252,7 +252,7 @@ public class TcpSend
                     dw.WriteBytes(Combine(BitConverter.GetBytes(dataSend.Length), dataSend));
                     await dw.StoreAsync();
                     dw.DetachStream();
-                    TcpSendCompleteEvent(BitConverter.GetBytes((UInt32)dataSend.Length));
+                    TcpSendCompleteEvent( BitConverter.GetBytes( (UInt32)(dataSend[0]) ) );
                 }
             }
         }
