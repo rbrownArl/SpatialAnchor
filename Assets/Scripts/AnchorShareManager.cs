@@ -122,7 +122,6 @@ public class AnchorShareManager : MonoBehaviour
     }
 
     private IEnumerator BroadcastIp()
-    //private void IpBroadcastOnce()
     {
         if (machineIp == null)
         {
@@ -131,7 +130,7 @@ public class AnchorShareManager : MonoBehaviour
         }
 
         yield return new WaitForSeconds(2.0f);
-        DebugWindow.DebugMessage("IpBroadcast");
+        DebugWindow.DebugMessage("BroadcastIp " + machineIp);
 
 
         byte[] bytes = MessageTypeToBytes(MessageType.SendIp);
@@ -139,7 +138,7 @@ public class AnchorShareManager : MonoBehaviour
 
         BroadcastUdpData(bytes);
 
-        yield return new WaitForSeconds(58.0f);
+        yield return new WaitForSeconds(18.0f);
         StartCoroutine("BroadcastIp");
     }
 
@@ -181,14 +180,14 @@ public class AnchorShareManager : MonoBehaviour
 
     private void UdpListener()
     {
-        byte[] receivedBytes = null;
-        byte[] receivedMessage = null;
+        //byte[] receivedBytes = null;
+        //byte[] receivedMessage = null;
 
         while (true)
         {
             try
             {
-                receivedBytes = udpListener.ReceiveUdpData(ipPort);
+                byte[] receivedBytes = udpListener.ReceiveUdpData(ipPort);
                 receivedMessages.Add(receivedBytes);
             }
             catch(Exception e)
@@ -203,15 +202,18 @@ public class AnchorShareManager : MonoBehaviour
         int sourceIpLen = (int)(receivedBytes[0]);
         string sourceIp = Encoding.UTF8.GetString(receivedBytes.Skip(1).Take(sourceIpLen).ToArray());
 
-        if (sourceIp.Equals(machineIp))
-            return;
-
         byte[] messageTypeBytes = receivedBytes.Skip(1 + sourceIpLen).Take(4).ToArray();
         MessageType messageType = (MessageType)BitConverter.ToUInt32(messageTypeBytes, 0);
-        
+
+        //                                       ipLen + ipString + messageType
         byte[] receivedMessage = receivedBytes.Skip(1 + sourceIpLen + 4).ToArray();
 
-        DebugWindow.DebugMessage("Message from " + sourceIp + ": " + messageType.ToString());
+     
+        //if (sourceIp.Equals(machineIp))
+        //    return;
+
+        
+        DebugWindow.DebugMessage("Process Message from " + sourceIp + ": " + messageType.ToString() + " " + Encoding.UTF8.GetString(receivedMessage));
 
         switch (messageType)
         {
@@ -245,28 +247,26 @@ public class AnchorShareManager : MonoBehaviour
 
     private void OnUpdateIps(string sourceIp, MessageType messageType, byte[] bytes)
     {
-        int sourceIpLength = (int)bytes[0];
-        byte[] sourceIpBytes = bytes.Skip(1).Take(sourceIpLength).ToArray();
+        string ipString = Encoding.UTF8.GetString(bytes);
 
-        string ipString = Encoding.UTF8.GetString(sourceIpBytes);
-
-        DebugWindow.DebugMessage(messageType.ToString() + ": " + ipString);
+        //DebugWindow.DebugMessage("OnUpdateIps " + messageType.ToString() + ": " + ipString);
 
         IPAddress.Parse(ipString);
 
-        if (ipString != machineIp)
+        //if (ipString != machineIp)
+        //{
+        if (!ips.Contains(ipString))
         {
-            if (!ips.Contains(ipString))
-            {
-                ips.Add(ipString);
+            ips.Add(ipString);
+        }
                 DebugWindow.DebugMessage("Known IPs");
                 foreach (string ip in ips)
                 {
                     DebugWindow.DebugMessage("  " + ip);
                 }
                 BroadcastIp();
-            }
-        }
+         //   }
+        //}
     }
 
     private void OnClaimAnchor(string sourceIp, MessageType messageType, byte[] bytes)
@@ -473,7 +473,9 @@ public class AnchorShareManager : MonoBehaviour
                     AppendSourceIp(ref bytes);
                     AppendBytes(ref bytes, MessageTypeToBytes(MessageType.SendAnchor));
                     AppendBytes(ref bytes, serializedWorldAnchor);
+
                     TcpSend tcpSender = new TcpSend(ip, anchorPort.ToString(), bytes);
+                    tcpSender.TcpSendCompleteEvent += OnTcpMessageSent;
 
                     //TcpSend tcpSender = new TcpSend(ip, anchorPort.ToString(), serializedWorldAnchor);
                     //tcpSender.TcpSendCompleteEvent += OnTcpMessageSent;

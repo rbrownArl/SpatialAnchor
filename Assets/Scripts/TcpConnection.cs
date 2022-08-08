@@ -236,7 +236,6 @@ public class TcpSend
         SendData(address, port, dataSend);
     }
 
-
     public async void SendData(string address, string port, byte[] dataSend)
     {
 #if !UNITY_EDITOR
