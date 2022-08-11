@@ -108,7 +108,7 @@ public class DebugWindow : MonoBehaviour
     {
         QueueOnUpdate(() =>
         {
-            Debug.Log(message);
+            Debug.Log(string.Format("{0,5:###0.00}",Time.time) + ": " + message);
 
         });
     }

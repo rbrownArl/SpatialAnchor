@@ -62,12 +62,14 @@ public class MoveMe : MonoBehaviour
         anchorManager.LockAnchorObject(gameObject);
     }
 
+    //someone else grabbed it
     public void OnClaimed()
     {
         gameObject.GetComponent<Renderer>().material = lockedColor;
     }
 
-    public void OnReleased()
+    //someone else released it and it finished updating
+    public void OnUpdated()
     {
         gameObject.GetComponent<Renderer>().material = originalColor;
     }
