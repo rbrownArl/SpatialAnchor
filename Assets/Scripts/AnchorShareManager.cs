@@ -550,15 +550,15 @@ public class AnchorShareManager : MonoBehaviour
 
                     byte[] bytes = new byte[] { };
                     AppendSourceIp(ref bytes);
-                    AppendBytes(ref bytes, MessageTypeToBytes(MessageType.SendAnchor));
+                    AppendBytes(ref bytes, MessageTypeToBytes(MessageType.SendingAnchor));
                     AppendBytes(ref bytes, serializedWorldAnchor);
 
-                    TcpSend tcpSender = new TcpSend(ip, anchorPort.ToString(), bytes, OnTcpMessageSent);
+                    //TcpSend tcpSender = new TcpSend(ip, anchorPort.ToString(), bytes, OnTcpMessageSent);
                     //tcpSender.TcpSendCompleteEvent += OnTcpMessageSent; //ew... this gets set AFTER data is sent. bad.
 
-                    //TcpSend tcpSender = new TcpSend(ip, anchorPort.ToString(), serializedWorldAnchor);
-                    //tcpSender.TcpSendCompleteEvent += OnTcpMessageSent;
-                    //tcpSender.SendAnchor(ip, anchorPort.ToString(), serializedWorldAnchor);
+                    TcpSend tcpSender = new TcpSend();
+                    tcpSender.TcpSendCompleteEvent += OnTcpMessageSent;
+                    tcpSender.SendData(ip, anchorPort.ToString(), serializedWorldAnchor);
                 }
             }
             else

@@ -24,7 +24,7 @@ public class TcpSend
     public event TcpMessage TcpSendCompleteEvent;
 
     private string port;
-
+    private string address;
 
 #if !UNITY_EDITOR
     StreamSocket socket;
@@ -33,13 +33,18 @@ public class TcpSend
 
     public void filler(byte[] data) { }
 
+    public TcpSend()
+    {
+        TcpSendCompleteEvent += filler;
+
+    }
     public TcpSend(string address, string port, byte[] dataSend)
     {
         TcpSendCompleteEvent += filler;
 
         SendData(address, port, dataSend);
         DebugWindow.DebugMessage("Sent data");
-        //TcpSendCompleteEvent(BitConverter.GetBytes((UInt32)(dataSend[0])));
+        TcpSendCompleteEvent(BitConverter.GetBytes((UInt32)(dataSend[0])));
     }
 
     public TcpSend(string address, string port, byte[] dataSend, TcpMessage sendCompleteCallback)
@@ -51,7 +56,7 @@ public class TcpSend
         TcpSendCompleteEvent(BitConverter.GetBytes((UInt32)(dataSend[0])));
     }
 
-    private async Task SendData(string address, string port, byte[] dataSend)
+    public async Task SendData(string address, string port, byte[] dataSend)
     {
 #if !UNITY_EDITOR
         try
