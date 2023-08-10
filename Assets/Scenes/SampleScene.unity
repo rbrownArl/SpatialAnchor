@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 448af64b55036824cb4b9e5ec146eb54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefab: {fileID: 2296950806847638784, guid: 0218412fa94e2ca4fa13f595cf4d2380, type: 3}
+  prefab: {fileID: 4507293094998184498, guid: 55b54fddd1ec42d428581c8c1daacfd1, type: 3}
   iPBroadcastRate: 30
   targetIp: 192.168.1.110
 --- !u!1 &223974226 stripped

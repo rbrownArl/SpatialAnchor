@@ -618,11 +618,11 @@ PlayerSettings:
   m_MobileRenderingPath: 1
   metroPackageName: SerialAnchorPackage
   metroPackageVersion: 1.0.0.0
-  metroCertificatePath: Assets\WSATestCertificate.pfx
+  metroCertificatePath: Assets/WSATestCertificate.pfx
   metroCertificatePassword: 
-  metroCertificateSubject: DefaultCompany
-  metroCertificateIssuer: DefaultCompany
-  metroCertificateNotAfter: 80afdb26effed801
+  metroCertificateSubject: Nope
+  metroCertificateIssuer: Nope
+  metroCertificateNotAfter: 0048caf50deada01
   metroApplicationDescription: Trials to serialize anchors
   wsaImages: {}
   metroTileShortName: 
