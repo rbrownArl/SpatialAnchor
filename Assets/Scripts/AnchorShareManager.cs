@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TMPro;
 
 using UnityEngine;
 using UnityEngine.XR.WSA;
@@ -17,49 +9,29 @@ using UnityEngine.XR.WSA.Sharing;
 
 public class AnchorShareManager : MonoBehaviour
 {
-    public GameObject prefab;
+    public GameObject anchorPrefab;
+    public GameObject objectPrefab;
 
     private AnchorShareManager thisAnchorManager;
+    private NetworkDiscoveryManager thisNetworkDiscoveryManager;
 
     private WorldAnchorStore store;
-    private WorldAnchorTransferBatch transferBatch;
-
-    private Thread readAnchorThread;
-    private Thread readThread;
-    private Thread readIpThread;
 
     private int textPort = 9999;
     private int anchorPort = 4444;
-    private int ipPort = 9998;
-
-    public float iPBroadcastRate = 30.0f;
-    HashSet<string> ips;
-
-    private string machineName;
-    private string machineIp = "No Ip";
 
     public string targetIp;
 
-    private UdpListener udpListener = null;
     private TcpConnection tcpListener = null;
 
     List<byte[]> receivedMessages = null;
     //byte[] importedAnchor = null;
 
-    enum MessageType : UInt32
-    {
-        SendIp       = 0x4321,
-        SendPos      = 0x7EE7,
-        SendAnchor   = 0xBEEF,
-        DoneAnchor   = 0xDEAD,
-        CancelAnchor = 0x0000
-    }
-
     enum ImportState : int
     {
-        NoImport      = 0,
-        StartImport   = 1,
-        Importing     = 2,
+        NoImport = 0,
+        StartImport = 1,
+        Importing = 2,
         DoneImporting = 3
     }
 
@@ -68,26 +40,18 @@ public class AnchorShareManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        machineName = SystemInfo.deviceName;
-        machineIp = getMachineIp();
-
         thisAnchorManager = gameObject.GetComponent<AnchorShareManager>();
-        
+        thisNetworkDiscoveryManager = gameObject.GetComponent<NetworkDiscoveryManager>();
+
         //read WorldAnchorTransferBatch for existing anchors
         WorldAnchorStore.GetAsync(AnchorStoreLoaded);
 
-        udpListener = new UdpListener();
+        //udpListener = new UdpListener();
         tcpListener = new TcpConnection(anchorPort.ToString());
         tcpListener.TcpReceiveEvent += TcpMessageReceivedEvent;
 
         receivedMessages = new List<byte[]>();
 
-        ips = new HashSet<string>();
-        readIpThread = new Thread(new ThreadStart(UdpListener));
-        readIpThread.Start();
-
-        StartCoroutine("IpBroadcast");
-        //IpBroadcastOnce();
     }
 
     // Update is called once per frame
@@ -100,109 +64,9 @@ public class AnchorShareManager : MonoBehaviour
             ImportAnchor(receivedMessages[0]);
             receivedMessages.RemoveAt(0);
         }
-
-
     }
 
-
-    private IEnumerator IpBroadcast()
-    //private void IpBroadcastOnce()
-    {
-        if (machineIp == null)
-        {
-            DebugWindow.DebugMessage("No IP");
-            yield return null;
-        }
-        
-        yield return new WaitForSeconds(2.0f);
-        DebugWindow.DebugMessage("IpBroadcast");
-
-        byte[] bytes = MessageTypeToBytes(MessageType.SendIp);
-        AppendBytes(ref bytes, Encoding.UTF8.GetBytes(machineIp));
-
-        //udpBroadcast.SendMulticastUdpData(ipPort, Encoding.UTF8.GetBytes(machineIp));
-        new UdpBroadcastData(ipPort, bytes);
-
-        yield return new WaitForSeconds(58.0f);
-        StartCoroutine("IpBroadcast");
-    }
-
-    private void BroadcastPosOnce()
-    {
-        Vector3 pos = new Vector3(1, 2, 3);
-
-        DebugWindow.DebugMessage("Send Pos");
-        byte[] bytes = MessageTypeToBytes(MessageType.SendPos);
-        AppendBytes(ref bytes, Vector3ToBytes(pos));
-
-        new UdpBroadcastData(ipPort, bytes);
-    }
-
-    private void UdpListener()
-    {
-        byte[] receivedBytes = null;
-        byte[] receivedMessage = null;
-
-        while (true)
-        {
-            try
-            {
-                receivedBytes = udpListener.ReceiveUdpData(ipPort);
-
-                MessageType messageType = (MessageType)BitConverter.ToUInt32(receivedBytes, 0);
-
-                receivedMessage = receivedBytes.Skip(4).ToArray();
-
-                switch (messageType)
-                {
-                    case MessageType.SendIp:
-                        UpdateIps(messageType, receivedMessage);
-                        break;
-                    case MessageType.SendPos:
-                        UpdatePos(messageType, receivedMessage);
-                        break;
-                }
-            }
-            catch(Exception e)
-            {
-                DebugWindow.DebugMessage("UdpListener: " + e);
-            }
-        }
-    }
-    
-    private void UpdatePos(MessageType messageType, byte[] posBytes)
-    {
-        Vector3 pos = BytesToVector3(posBytes);
-
-        DebugWindow.DebugMessage(messageType.ToString() + ": " + pos.ToString());
-
-
-    }
-
-    private void UpdateIps(MessageType messageType, byte[] ipBytes)
-    {
-        string ipString = Encoding.UTF8.GetString(ipBytes);
-
-        DebugWindow.DebugMessage(messageType.ToString() + ": " + ipString);
-
-        IPAddress.Parse(ipString);
-
-        if (ipString != machineIp)
-        {
-            if (!ips.Contains(ipString))
-            {
-                ips.Add(ipString);
-                DebugWindow.DebugMessage("Known IPs");
-                foreach (string ip in ips)
-                {
-                    DebugWindow.DebugMessage("  " + ip);
-                }
-                IpBroadcast();
-            }
-        }
-    }
-
-    public void TcpMessageReceivedEvent(byte[] data) 
+    public void TcpMessageReceivedEvent(byte[] data)
     {
         DebugWindow.DebugMessage("Got anchor?" + data.Length);
         receivedMessages.Add(data);
@@ -213,7 +77,7 @@ public class AnchorShareManager : MonoBehaviour
 
     public void TcpMessageSentEvent(byte[] data)
     {
-        DebugWindow.DebugMessage("Tcp Send complete " + BitConverter.ToUInt32(data,0));
+        DebugWindow.DebugMessage("Tcp Send complete " + BitConverter.ToUInt32(data, 0));
     }
 
     public GameObject CreateOrUpdateAnchorObject(GameObject prefab, string gameObjectName)
@@ -225,16 +89,15 @@ public class AnchorShareManager : MonoBehaviour
             GameObject defaultObject = Instantiate(prefab, new Vector3(0f, 0f, 0.75f), Quaternion.identity);
             defaultObject.name = gameObjectName;
             defaultObject.GetComponent<MoveMe>().anchorManager = thisAnchorManager;
-            BroadcastPosOnce();
+            thisNetworkDiscoveryManager.BroadcastPosOnce();
 
             return defaultObject;
         }
         else
         {
-            BroadcastPosOnce();
+            thisNetworkDiscoveryManager.BroadcastPosOnce();
             return existing;
         }
-
     }
 
     public void MoveAnchorObject(GameObject anchoredObject)
@@ -259,10 +122,11 @@ public class AnchorShareManager : MonoBehaviour
         this.store = store;
         LoadAnchors();
 
-        //if no existing anchor, create a prefab at known location... (don't store until move)
+        //if no existing anchor, create a anchorPrefab at known location... (don't store until move)
         if (store.anchorCount == 0)
         {
-            GameObject defaultObject = CreateOrUpdateAnchorObject(prefab, prefab.name + "-" + SystemInfo.deviceName);
+            DebugWindow.DebugMessage(anchorPrefab.name);
+            GameObject defaultObject = CreateOrUpdateAnchorObject(anchorPrefab, anchorPrefab.name + "-" + SystemInfo.deviceName);
             DebugWindow.DebugMessage("Created " + defaultObject.name + " at " + defaultObject.transform.position.ToString());
         }
     }
@@ -280,18 +144,16 @@ public class AnchorShareManager : MonoBehaviour
 
     private void LoadAnchors()
     {
-
         DebugWindow.DebugMessage("Number of anchors: " + store.anchorCount);
 
-
-        //Instantiate a prefab for each existing anchor
-        //If/when the existing anchor is located, the prefab will automatically bounce to correct location.
+        //Instantiate a anchorPrefab for each existing anchor
+        //If/when the existing anchor is located, the anchorPrefab will automatically bounce to correct location.
         foreach (string anchorId in store.GetAllIds())
         {
             DebugWindow.DebugMessage("Trying anchor " + anchorId);
-            GameObject newAnchoredObject = CreateOrUpdateAnchorObject(prefab, anchorId);
+            GameObject newAnchoredObject = CreateOrUpdateAnchorObject(anchorPrefab, anchorId);
             DebugWindow.DebugMessage("It's position is " + newAnchoredObject.transform.position.ToString());
-            
+
             WorldAnchor anchor = store.Load(anchorId, newAnchoredObject);
             if (anchor != null)
             {
@@ -302,7 +164,6 @@ public class AnchorShareManager : MonoBehaviour
                 DebugWindow.DebugMessage("It has a null anchor");
             }
         }
-
     }
 
     //Create the unity world anchor attached to anchoredObject
@@ -334,19 +195,18 @@ public class AnchorShareManager : MonoBehaviour
     //Serialize and send WorldAnchor over network
     private void ExportAnchor(string anchorId, WorldAnchor transferAnchor)
     {
-        
+
         byte[] serializedWorldAnchor = new byte[0];
 
         void OnExportDataAvailable(byte[] data)
         {
             //send to other h2
             //DebugWindow.DebugMessage("Export Data available " + data.Length + " " + serializedWorldAnchor.Length);
-            AppendBytes(ref serializedWorldAnchor, data);
+            Utility.AppendBytes(ref serializedWorldAnchor, data);
         }
 
         void OnExportComplete(SerializationCompletionReason reason)
         {
-            
             if (reason == SerializationCompletionReason.Succeeded)
             {
                 DebugWindow.DebugMessage("Export Complete " + reason.ToString());
@@ -357,7 +217,7 @@ public class AnchorShareManager : MonoBehaviour
                 string path = string.Format("{0}/{1}.bin", Application.persistentDataPath, anchorId + "-serializedTransferAnchor.bin");
                 File.WriteAllBytes(path, serializedWorldAnchor);
 
-                foreach (string ip in ips)
+                foreach (string ip in thisNetworkDiscoveryManager.GetIps())
                 {
                     void OnTcpMessageSent(byte[] data)
                     {
@@ -383,9 +243,6 @@ public class AnchorShareManager : MonoBehaviour
 
             transferBatch.AddWorldAnchor(anchorId, transferAnchor);
             WorldAnchorTransferBatch.ExportAsync(transferBatch, OnExportDataAvailable, OnExportComplete);
-
-
-
         }
         catch (Exception e)
         {
@@ -410,7 +267,7 @@ public class AnchorShareManager : MonoBehaviour
                     foreach (string id in ids)
                     {
                         DebugWindow.DebugMessage("--" + id);
-                        GameObject importedObject = CreateOrUpdateAnchorObject(prefab, id);
+                        GameObject importedObject = CreateOrUpdateAnchorObject(anchorPrefab, id);
                         importedBatch.LockObject(id, importedObject);
                     }
                 }
@@ -427,68 +284,10 @@ public class AnchorShareManager : MonoBehaviour
             //Import anchor (automatically updates position)
             WorldAnchorTransferBatch.ImportAsync(importedData, OnImportComplete);
             DebugWindow.DebugMessage("ImportAnchor " + importedData.Length);
-
-
         }
         catch (Exception e)
         {
             DebugWindow.DebugMessage("Import Anchor Failed " + e.ToString());
         }
-    }
-
-    private byte[] MessageTypeToBytes(MessageType message)
-    {
-        return BitConverter.GetBytes((UInt32)message);
-    }
-
-    private void AppendBytes(ref byte[] b1, byte[] b2)
-    {
-        byte[] b3 = new byte[b1.Length + b2.Length];
-
-        b1.CopyTo(b3, 0);
-        b2.CopyTo(b3, b1.Length);
-
-        b1 = b3;
-    }
-
-    private byte[] Vector3ToBytes(Vector3 vect)
-    {
-        byte[] buff = new byte[sizeof(float) * 3];
-        Buffer.BlockCopy(BitConverter.GetBytes(vect.x), 0, buff, 0 * sizeof(float), sizeof(float));
-        Buffer.BlockCopy(BitConverter.GetBytes(vect.y), 0, buff, 1 * sizeof(float), sizeof(float));
-        Buffer.BlockCopy(BitConverter.GetBytes(vect.z), 0, buff, 2 * sizeof(float), sizeof(float));
-
-        return buff;
-    }
-
-    private Vector3 BytesToVector3(byte[] bytes)
-    {
-        Vector3 vect = Vector3.zero;
-        vect.x = BitConverter.ToSingle(bytes, 0 * sizeof(float));
-        vect.y = BitConverter.ToSingle(bytes, 1 * sizeof(float));
-        vect.z = BitConverter.ToSingle(bytes, 2 * sizeof(float));
-
-        return vect;
-    }
-
-    private string getMachineIp()
-    {
-        try
-        {
-            foreach (IPAddress ip in Dns.GetHostAddresses(machineName))
-            {
-                DebugWindow.DebugMessage(ip.ToString());
-                if (ip.ToString().StartsWith("192"))
-                {
-                    machineIp = ip.ToString();
-                    DebugWindow.DebugMessage("Using IP: " + machineIp);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            DebugWindow.DebugMessage("get HostIp error " + e);
-        }
-        return machineIp;
     }
 }

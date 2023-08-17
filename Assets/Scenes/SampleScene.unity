@@ -132,6 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 15658836}
   - component: {fileID: 15658837}
+  - component: {fileID: 15658838}
   m_Layer: 0
   m_Name: AnchorShareManager
   m_TagString: Untagged
@@ -165,9 +166,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 448af64b55036824cb4b9e5ec146eb54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefab: {fileID: 4507293094998184498, guid: 55b54fddd1ec42d428581c8c1daacfd1, type: 3}
-  iPBroadcastRate: 30
+  anchorPrefab: {fileID: 4507293094998184498, guid: 55b54fddd1ec42d428581c8c1daacfd1,
+    type: 3}
+  objectPrefab: {fileID: 2296950806847638784, guid: 0218412fa94e2ca4fa13f595cf4d2380,
+    type: 3}
   targetIp: 192.168.1.110
+--- !u!114 &15658838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 15658835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb6a7afb4d80d94ca3d7e58a414306b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iPBroadcastRate: 30
 --- !u!1 &223974226 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4679913627488335819, guid: 86e1e5143e1203349a624109d185935f,
