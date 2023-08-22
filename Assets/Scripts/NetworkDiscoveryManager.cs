@@ -18,7 +18,7 @@ class NetworkDiscoveryManager : MonoBehaviour
     private UdpListener udpListener = null;
     private HashSet<string> ips;
 
-    public float iPBroadcastRate = 30.0f;
+    public float iPBroadcastRate = 60.0f;
 
 
     public enum MessageType : UInt32
@@ -51,7 +51,6 @@ class NetworkDiscoveryManager : MonoBehaviour
             yield return null;
         }
 
-        yield return new WaitForSeconds(2.0f);
         DebugWindow.DebugMessage("IpBroadcast");
 
         byte[] bytes = Utility.MessageTypeToBytes((UInt32)MessageType.SendIp);
@@ -60,26 +59,34 @@ class NetworkDiscoveryManager : MonoBehaviour
         //udpBroadcast.SendMulticastUdpData(ipPort, Encoding.UTF8.GetBytes(machineIp));
         new UdpBroadcastData(ipPort, bytes);
 
-        yield return new WaitForSeconds(58.0f);
+        yield return new WaitForSeconds(iPBroadcastRate);
         StartCoroutine("IpBroadcast");
     }
 
-    public void BroadcastPosOnce()
+    public void BroadcastPosOnce(GameObject gameObject)
     {
-        Vector3 pos = new Vector3(1, 2, 3);
 
         DebugWindow.DebugMessage("Send Pos");
         byte[] bytes = Utility.MessageTypeToBytes((UInt32)MessageType.SendPos);
-        Utility.AppendBytes(ref bytes, Utility.Vector3ToBytes(pos));
+        Utility.AppendBytes(ref bytes, Utility.Vector3ToBytes(gameObject.transform.position));
+        Utility.AppendBytes(ref bytes, Utility.StringToBytes(gameObject.name));
 
         new UdpBroadcastData(ipPort, bytes);
     }
 
-    public void UpdatePos(MessageType messageType, byte[] posBytes)
+    public void UpdatePos(MessageType messageType, byte[] message)
     {
-        Vector3 pos = Utility.BytesToVector3(posBytes);
+        byte[] posBytes = new byte[sizeof(float) * 3];
+        Buffer.BlockCopy(message, 0, posBytes, 0 * sizeof(float), posBytes.Length);
 
-        DebugWindow.DebugMessage(messageType.ToString() + ": " + pos.ToString());
+        byte[] nameBytes = new byte[message.Length - posBytes.Length];
+        Buffer.BlockCopy(message, posBytes.Length, nameBytes, 0, nameBytes.Length);
+
+
+        Vector3 pos = Utility.BytesToVector3(posBytes);
+        String name = Utility.BytesToString(nameBytes);
+
+        DebugWindow.DebugMessage(name + ": " + pos.ToString());
     }
 
     private void UpdateIps(MessageType messageType, byte[] ipBytes)

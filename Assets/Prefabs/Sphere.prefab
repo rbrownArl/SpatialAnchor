@@ -187,12 +187,11 @@ GameObject:
   - component: {fileID: 2296950806847638840}
   - component: {fileID: 2296950806847638841}
   - component: {fileID: 2296950806847638842}
-  - component: {fileID: 2296950806847638843}
   - component: {fileID: 2296950806847638844}
   - component: {fileID: 2296950806847638845}
   - component: {fileID: 2296950806847638846}
-  - component: {fileID: 4325085963611736375}
   - component: {fileID: 1160042478}
+  - component: {fileID: 2962023491744118564}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: Untagged
@@ -275,14 +274,6 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!362 &2296950806847638843
-WorldAnchor:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2296950806847638784}
-  serializedVersion: 2
 --- !u!114 &2296950806847638844
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -342,7 +333,7 @@ MonoBehaviour:
   onManipulationStarted:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4325085963611736375}
+      - m_Target: {fileID: 2962023491744118564}
         m_MethodName: Grab
         m_Mode: 1
         m_Arguments:
@@ -356,7 +347,7 @@ MonoBehaviour:
   onManipulationEnded:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4325085963611736375}
+      - m_Target: {fileID: 2962023491744118564}
         m_MethodName: Release
         m_Mode: 1
         m_Arguments:
@@ -373,22 +364,6 @@ MonoBehaviour:
   onHoverExited:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &4325085963611736375
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2296950806847638784}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c27e73700c5681d488ae7d604e7b9660, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  selectedColor: {fileID: 2100000, guid: 978c13c1492639341a61913375335e64, type: 2}
-  originalColor: {fileID: 2100000, guid: 680505b4b4f3400f9fd3ebb242751819, type: 2}
-  lostColor: {fileID: 2100000, guid: 6c0366ebfed014a40a2e6923663c7381, type: 2}
-  anchorManager: {fileID: 0}
 --- !u!114 &1160042478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -403,6 +378,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   placard: {fileID: 4377204198416418532}
   txtName: {fileID: 1843041688}
+--- !u!114 &2962023491744118564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2296950806847638784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee5d451f1daa48643bb0bff74b16da04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  selectedColor: {fileID: 2100000, guid: 978c13c1492639341a61913375335e64, type: 2}
+  originalColor: {fileID: 2100000, guid: 978c13c1492639341a61913375335e64, type: 2}
+  lostColor: {fileID: 2100000, guid: 6c0366ebfed014a40a2e6923663c7381, type: 2}
+  anchor: {fileID: 0}
 --- !u!1 &4377204198416418532
 GameObject:
   m_ObjectHideFlags: 0

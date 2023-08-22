@@ -224,6 +224,7 @@ GameObject:
   - component: {fileID: -6217848138003296431}
   - component: {fileID: 5941715411271926310}
   - component: {fileID: 1525569516410826795}
+  - component: {fileID: -2428016523233627334}
   m_Layer: 0
   m_Name: ASA_Marker
   m_TagString: Untagged
@@ -324,6 +325,8 @@ MonoBehaviour:
   originalColor: {fileID: 2100000, guid: 680505b4b4f3400f9fd3ebb242751819, type: 2}
   lostColor: {fileID: 2100000, guid: 67e4ae112f094f3082e033060c3cd298, type: 2}
   anchorManager: {fileID: 0}
+  objectPrefab: {fileID: 0}
+  initialObjectPosition: {x: 0, y: 0, z: 1}
 --- !u!114 &-8022123448826491484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -337,7 +340,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoConstraintSelection: 1
-  selectedConstraints: []
+  selectedConstraints:
+  - {fileID: -2428016523233627334}
 --- !u!114 &-6217848138003296431
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -425,8 +429,24 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
+  m_Radius: 0.1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-2428016523233627334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4507293094998184498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b3e6359c9750ad4fb8a05c9b8704d7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  handType: 3
+  proximityType: 3
+  constraintOnRotation: 5
+  useLocalSpaceForConstraint: 0
 --- !u!1001 &4507293094624309645
 PrefabInstance:
   m_ObjectHideFlags: 0

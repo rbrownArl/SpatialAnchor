@@ -20,8 +20,6 @@ public class AnchorShareManager : MonoBehaviour
     private int textPort = 9999;
     private int anchorPort = 4444;
 
-    public string targetIp;
-
     private TcpConnection tcpListener = null;
 
     List<byte[]> receivedMessages = null;
@@ -41,8 +39,8 @@ public class AnchorShareManager : MonoBehaviour
     void Start()
     {
         thisAnchorManager = gameObject.GetComponent<AnchorShareManager>();
-        thisNetworkDiscoveryManager = gameObject.GetComponent<NetworkDiscoveryManager>();
-
+        thisNetworkDiscoveryManager = GameObject.Find("NetworkDiscoveryManager").GetComponent<NetworkDiscoveryManager>();
+         
         //read WorldAnchorTransferBatch for existing anchors
         WorldAnchorStore.GetAsync(AnchorStoreLoaded);
 
@@ -80,22 +78,23 @@ public class AnchorShareManager : MonoBehaviour
         DebugWindow.DebugMessage("Tcp Send complete " + BitConverter.ToUInt32(data, 0));
     }
 
-    public GameObject CreateOrUpdateAnchorObject(GameObject prefab, string gameObjectName)
+    public GameObject CreateOrUpdateAnchorObject(GameObject anchorPrefab, string gameObjectName)
     {
         GameObject existing = GameObject.Find(gameObjectName);
 
         if (existing == null)
         {
-            GameObject defaultObject = Instantiate(prefab, new Vector3(0f, 0f, 0.75f), Quaternion.identity);
-            defaultObject.name = gameObjectName;
-            defaultObject.GetComponent<MoveMe>().anchorManager = thisAnchorManager;
-            thisNetworkDiscoveryManager.BroadcastPosOnce();
+            GameObject anchor = Instantiate(anchorPrefab, new Vector3(0f, 0f, 0.75f), Quaternion.identity);
+            anchor.name = gameObjectName;
+            anchor.GetComponent<MoveAnchor>().anchorManager = thisAnchorManager;
+            anchor.GetComponent<MoveAnchor>().objectPrefab = objectPrefab;
+            thisNetworkDiscoveryManager.BroadcastPosOnce(anchorPrefab);
 
-            return defaultObject;
+            return anchor;
         }
         else
         {
-            thisNetworkDiscoveryManager.BroadcastPosOnce();
+            thisNetworkDiscoveryManager.BroadcastPosOnce(existing);
             return existing;
         }
     }

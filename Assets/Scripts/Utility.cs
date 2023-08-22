@@ -44,6 +44,21 @@ class Utility
         return vect;
     }
 
+    public static byte[] StringToBytes(String text)
+    {
+        byte[] buff = new byte[sizeof(char) * text.Length];
+        Buffer.BlockCopy(Convert.FromBase64String(text), 0, buff, 0, text.Length);
+
+        return buff;
+    }
+
+    public static String BytesToString(byte[] bytes)
+    {
+        String text = Convert.ToBase64String(bytes);
+
+        return text;
+    }
+
     public static string getMachineIp(string machineName)
     {
         string machineIp = "";
@@ -51,8 +66,8 @@ class Utility
         {
             foreach (IPAddress ip in Dns.GetHostAddresses(machineName))
             {
-                DebugWindow.DebugMessage(ip.ToString());
-                if (ip.ToString().StartsWith("172"))
+/*                DebugWindow.DebugMessage(ip.ToString());
+                if (ip.ToString().StartsWith("10"))*/
                 {
                     machineIp = ip.ToString();
                     DebugWindow.DebugMessage("Using IP: " + machineIp);
