@@ -39,6 +39,7 @@ public class AnchorShareManager : MonoBehaviour
     void Start()
     {
         thisAnchorManager = gameObject.GetComponent<AnchorShareManager>();
+
         thisNetworkDiscoveryManager = GameObject.Find("NetworkDiscoveryManager").GetComponent<NetworkDiscoveryManager>();
          
         //read WorldAnchorTransferBatch for existing anchors

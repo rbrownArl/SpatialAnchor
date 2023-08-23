@@ -16,9 +16,9 @@ class NetworkDiscoveryManager : MonoBehaviour
     private Thread readIpThread;
 
     private UdpListener udpListener = null;
-    private HashSet<string> ips;
+    private HashSet<string> ips = new HashSet<string>();
 
-    public float iPBroadcastRate = 60.0f;
+    public float iPBroadcastRate = 30.0f;
 
 
     public enum MessageType : UInt32
@@ -36,7 +36,6 @@ class NetworkDiscoveryManager : MonoBehaviour
         machineIp = Utility.getMachineIp(machineName);
 
         udpListener = new UdpListener();
-        ips = new HashSet<string>();
         readIpThread = new Thread(new ThreadStart(UdpListener));
         readIpThread.Start();
 
@@ -56,37 +55,10 @@ class NetworkDiscoveryManager : MonoBehaviour
         byte[] bytes = Utility.MessageTypeToBytes((UInt32)MessageType.SendIp);
         Utility.AppendBytes(ref bytes, Encoding.UTF8.GetBytes(machineIp));
 
-        //udpBroadcast.SendMulticastUdpData(ipPort, Encoding.UTF8.GetBytes(machineIp));
         new UdpBroadcastData(ipPort, bytes);
 
         yield return new WaitForSeconds(iPBroadcastRate);
         StartCoroutine("IpBroadcast");
-    }
-
-    public void BroadcastPosOnce(GameObject gameObject)
-    {
-
-        DebugWindow.DebugMessage("Send Pos");
-        byte[] bytes = Utility.MessageTypeToBytes((UInt32)MessageType.SendPos);
-        Utility.AppendBytes(ref bytes, Utility.Vector3ToBytes(gameObject.transform.position));
-        Utility.AppendBytes(ref bytes, Utility.StringToBytes(gameObject.name));
-
-        new UdpBroadcastData(ipPort, bytes);
-    }
-
-    public void UpdatePos(MessageType messageType, byte[] message)
-    {
-        byte[] posBytes = new byte[sizeof(float) * 3];
-        Buffer.BlockCopy(message, 0, posBytes, 0 * sizeof(float), posBytes.Length);
-
-        byte[] nameBytes = new byte[message.Length - posBytes.Length];
-        Buffer.BlockCopy(message, posBytes.Length, nameBytes, 0, nameBytes.Length);
-
-
-        Vector3 pos = Utility.BytesToVector3(posBytes);
-        String name = Utility.BytesToString(nameBytes);
-
-        DebugWindow.DebugMessage(name + ": " + pos.ToString());
     }
 
     private void UpdateIps(MessageType messageType, byte[] ipBytes)
@@ -110,6 +82,36 @@ class NetworkDiscoveryManager : MonoBehaviour
                 IpBroadcast();
             }
         }
+    }
+
+    public void BroadcastPosOnce(GameObject gameObject)
+    {
+
+        DebugWindow.DebugMessage("Send Pos");
+        byte[] bytes = Utility.MessageTypeToBytes((UInt32)MessageType.SendPos);
+        Utility.AppendBytes(ref bytes, Utility.Vector3ToBytes(gameObject.transform.position));
+        Utility.AppendBytes(ref bytes, Utility.StringToBytes(gameObject.name));
+
+        new UdpBroadcastData(ipPort, bytes);
+    }
+
+    public void UpdatePos(MessageType messageType, byte[] message)
+    {
+        DebugWindow.DebugMessage("UpdatePosStart");
+        
+        byte[] posBytes = new byte[sizeof(float) * 3];
+        //BlockCopy(source, srcStart, dst, destStart, length)
+        Buffer.BlockCopy(message, 0, posBytes, 0, sizeof(float) * 3);
+        Vector3 pos = Utility.BytesToVector3(posBytes);
+
+        DebugWindow.DebugMessage(pos.ToString());
+
+        byte[] nameBytes = new byte[message.Length - posBytes.Length];
+        Buffer.BlockCopy(message, posBytes.Length, nameBytes, 0, nameBytes.Length);
+        String name = Utility.BytesToString(nameBytes);
+
+        DebugWindow.DebugMessage(name + ": " + pos.ToString());
+        DebugWindow.DebugMessage("UpdatePosStop");
     }
 
     private void UdpListener()

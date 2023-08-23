@@ -27,7 +27,7 @@ public class MoveAnchor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        networkDiscoveryManager = GameObject.Find("NetworkDiscoverManager").GetComponent<NetworkDiscoveryManager>();
+        networkDiscoveryManager = GameObject.Find("NetworkDiscoveryManager").GetComponent<NetworkDiscoveryManager>();
 
         if (originalColor == null)
             originalColor = gameObject.GetComponent<Renderer>().material;
@@ -74,7 +74,7 @@ public class MoveAnchor : MonoBehaviour
         if (located)
         {
             gameObject.GetComponent<Renderer>().material = originalColor;
-            GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + ".sphere");
+            //GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + ".sphere");
         }
         else
             gameObject.GetComponent<Renderer>().material = lostColor;
@@ -91,13 +91,13 @@ public class MoveAnchor : MonoBehaviour
             objectInst.name = gameObjectName;
             objectInst.GetComponent<MoveObject>().anchor = this.gameObject;
 
-            networkDiscoveryManager.BroadcastPosOnce(objectInst);
+            //networkDiscoveryManager.BroadcastPosOnce(objectInst);
 
             return objectInst;
         }
         else
         {
-            networkDiscoveryManager.BroadcastPosOnce(existing);
+            //networkDiscoveryManager.BroadcastPosOnce(existing);
             return existing;
         }
     }

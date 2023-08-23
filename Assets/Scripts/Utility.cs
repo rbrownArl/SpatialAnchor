@@ -46,15 +46,14 @@ class Utility
 
     public static byte[] StringToBytes(String text)
     {
-        byte[] buff = new byte[sizeof(char) * text.Length];
-        Buffer.BlockCopy(Convert.FromBase64String(text), 0, buff, 0, text.Length);
+        byte[] buff = System.Text.Encoding.UTF8.GetBytes(text);
 
         return buff;
     }
 
     public static String BytesToString(byte[] bytes)
     {
-        String text = Convert.ToBase64String(bytes);
+        String text = System.Text.Encoding.UTF8.GetString(bytes);
 
         return text;
     }
