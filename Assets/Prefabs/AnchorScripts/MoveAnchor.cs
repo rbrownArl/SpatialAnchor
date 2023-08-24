@@ -15,18 +15,19 @@ public class MoveAnchor : MonoBehaviour
     public Material originalColor;
     public Material lostColor;
 
-    public AnchorShareManager anchorManager;
-
     public GameObject objectPrefab;
 
     public Vector3 initialObjectPosition = new Vector3(0f, 0f, 0.7f);
 
     private WorldAnchor anchor;
+
+    private AnchorShareManager anchorShareManager;
     private NetworkDiscoveryManager networkDiscoveryManager;
 
     // Start is called before the first frame update
     void Start()
     {
+        anchorShareManager = GameObject.Find("AnchorShareManager").GetComponent<AnchorShareManager>();
         networkDiscoveryManager = GameObject.Find("NetworkDiscoveryManager").GetComponent<NetworkDiscoveryManager>();
 
         if (originalColor == null)
@@ -58,14 +59,14 @@ public class MoveAnchor : MonoBehaviour
     {
         gameObject.GetComponent<Renderer>().material = selectedColor;
         
-        anchorManager.MoveAnchorObject(gameObject);
+        anchorShareManager.MoveAnchorObject(gameObject);
     }    
 
     public void Release()
     {
         gameObject.GetComponent<Renderer>().material = originalColor;
 
-        anchorManager.LockAnchorObject(gameObject);
+        anchorShareManager.LockAnchorObject(gameObject);
     }
 
     private void Anchor_OnTrackingChanged(WorldAnchor self, bool located)

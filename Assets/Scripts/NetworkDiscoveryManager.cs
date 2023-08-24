@@ -87,19 +87,19 @@ class NetworkDiscoveryManager : MonoBehaviour
     public void BroadcastPosOnce(GameObject gameObject)
     {
 
-        DebugWindow.DebugMessage("Send Pos");
+/*        DebugWindow.DebugMessage("Send Pos");
         byte[] bytes = Utility.MessageTypeToBytes((UInt32)MessageType.SendPos);
         Utility.AppendBytes(ref bytes, Utility.Vector3ToBytes(gameObject.transform.position));
         Utility.AppendBytes(ref bytes, Utility.StringToBytes(gameObject.name));
 
-        new UdpBroadcastData(ipPort, bytes);
+        new UdpBroadcastData(ipPort, bytes);*/
     }
 
     public void UpdatePos(MessageType messageType, byte[] message)
     {
         DebugWindow.DebugMessage("UpdatePosStart");
         
-        byte[] posBytes = new byte[sizeof(float) * 3];
+/*        byte[] posBytes = new byte[sizeof(float) * 3];
         //BlockCopy(source, srcStart, dst, destStart, length)
         Buffer.BlockCopy(message, 0, posBytes, 0, sizeof(float) * 3);
         Vector3 pos = Utility.BytesToVector3(posBytes);
@@ -110,7 +110,7 @@ class NetworkDiscoveryManager : MonoBehaviour
         Buffer.BlockCopy(message, posBytes.Length, nameBytes, 0, nameBytes.Length);
         String name = Utility.BytesToString(nameBytes);
 
-        DebugWindow.DebugMessage(name + ": " + pos.ToString());
+        DebugWindow.DebugMessage(name + ": " + pos.ToString());*/
         DebugWindow.DebugMessage("UpdatePosStop");
     }
 

@@ -87,7 +87,7 @@ public class AnchorShareManager : MonoBehaviour
         {
             GameObject anchor = Instantiate(anchorPrefab, new Vector3(0f, 0f, 0.75f), Quaternion.identity);
             anchor.name = gameObjectName;
-            anchor.GetComponent<MoveAnchor>().anchorManager = thisAnchorManager;
+            //anchor.GetComponent<MoveAnchor>().anchorShareManager = thisAnchorManager;
             anchor.GetComponent<MoveAnchor>().objectPrefab = objectPrefab;
             thisNetworkDiscoveryManager.BroadcastPosOnce(anchorPrefab);
 
@@ -102,19 +102,27 @@ public class AnchorShareManager : MonoBehaviour
 
     public void MoveAnchorObject(GameObject anchoredObject)
     {
+        DebugWindow.DebugMessage("MoveAnchorObject started");
         //Destroy the unity world anchor attached to anchoredObject
         ClearAnchor(anchoredObject);
+        DebugWindow.DebugMessage("MoveAnchorObject done");
+
     }
 
     //On move anchor
     public void LockAnchorObject(GameObject anchoredObject)
     {
+        DebugWindow.DebugMessage("LockAnchorObject started: " + anchoredObject.name);
+
         //Store updated anchor
         SaveAnchor(anchoredObject);
 
+        DebugWindow.DebugMessage("LockAnchorOject, after saveAnchor");
         //Export anchor
         //Broadcast updated anchor
         ExportAnchor(anchoredObject.name, anchoredObject.GetComponent<WorldAnchor>());
+
+        DebugWindow.DebugMessage("LockAnchorObject done");
     }
 
     private void AnchorStoreLoaded(WorldAnchorStore store)
@@ -171,25 +179,35 @@ public class AnchorShareManager : MonoBehaviour
     //Save a named spatial anchor to the store with the unity world anchor
     private void SaveAnchor(GameObject anchoredObject)
     {
-        bool retTrue;
-        WorldAnchor anchor = anchoredObject.AddComponent<WorldAnchor>();
-        store.Delete(anchoredObject.name.ToString());
+        DebugWindow.DebugMessage("Starting SaveAnchor");
+        WorldAnchor anchor = (anchoredObject.GetComponent<WorldAnchor>() != null) ? 
+                             anchoredObject.AddComponent<WorldAnchor>() : 
+                             anchoredObject.GetComponent<WorldAnchor>();
+        
+        DebugWindow.DebugMessage("    deleteAnchor");
+        bool deleted = store.Delete(anchoredObject.name.ToString());
+        DebugWindow.DebugMessage("    saveAnchor:"+deleted);
+        bool retTrue = store.Save(anchoredObject.name.ToString(), anchor);
+        DebugWindow.DebugMessage("    savedAnchor:" + retTrue);
 
-        retTrue = store.Save(anchoredObject.name.ToString(), anchor);
         if (!retTrue)
         {
             DebugWindow.DebugMessage("Anchor save failed");
         }
+        DebugWindow.DebugMessage("Ending SaveAnchor");
+
     }
 
     //Delete the unity world anchor to allow the gameObject to be moved
     private void ClearAnchor(GameObject anchoredObject)
     {
+        DebugWindow.DebugMessage("Starting ClearAnchor");
         WorldAnchor anchor = anchoredObject.GetComponent<WorldAnchor>();
         if (anchor)
         {
             DestroyImmediate(anchor);
         }
+        DebugWindow.DebugMessage("Ending ClearAnchor");
     }
 
     //Serialize and send WorldAnchor over network
@@ -269,6 +287,8 @@ public class AnchorShareManager : MonoBehaviour
                         DebugWindow.DebugMessage("--" + id);
                         GameObject importedObject = CreateOrUpdateAnchorObject(anchorPrefab, id);
                         importedBatch.LockObject(id, importedObject);
+
+                        //SaveAnchor(importedObject);
                     }
                 }
                 else
