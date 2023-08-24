@@ -92,13 +92,13 @@ public class MoveAnchor : MonoBehaviour
             objectInst.name = gameObjectName;
             objectInst.GetComponent<MoveObject>().anchor = this.gameObject;
 
-            //networkDiscoveryManager.BroadcastPosOnce(objectInst);
+            networkDiscoveryManager.BroadcastPosOnce(objectInst);
 
             return objectInst;
         }
         else
         {
-            //networkDiscoveryManager.BroadcastPosOnce(existing);
+            networkDiscoveryManager.BroadcastPosOnce(existing);
             return existing;
         }
     }
