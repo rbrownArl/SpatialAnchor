@@ -61,6 +61,7 @@ class NetworkDiscoveryManager : MonoBehaviour
         StartCoroutine("IpBroadcast");
     }
 
+    //Read new known Ips
     private void UpdateIps(MessageType messageType, byte[] ipBytes)
     {
         string ipString = Encoding.UTF8.GetString(ipBytes);
@@ -71,6 +72,9 @@ class NetworkDiscoveryManager : MonoBehaviour
 
         if (ipString != machineIp)
         {
+            // encountered a new IP
+            //   print the updated known ips
+            //   immediately, broadcast our address so the new guy gets it
             if (!ips.Contains(ipString))
             {
                 ips.Add(ipString);
@@ -86,32 +90,27 @@ class NetworkDiscoveryManager : MonoBehaviour
 
     public void BroadcastPosOnce(GameObject gameObject)
     {
-
-/*        DebugWindow.DebugMessage("Send Pos");
         byte[] bytes = Utility.MessageTypeToBytes((UInt32)MessageType.SendPos);
         Utility.AppendBytes(ref bytes, Utility.Vector3ToBytes(gameObject.transform.position));
         Utility.AppendBytes(ref bytes, Utility.StringToBytes(gameObject.name));
 
-        new UdpBroadcastData(ipPort, bytes);*/
+        DebugWindow.DebugMessage("Sending " + gameObject.name + ": " + gameObject.transform.position);
+        new UdpBroadcastData(ipPort, bytes);
     }
 
+    //Read new positions for object
     public void UpdatePos(MessageType messageType, byte[] message)
-    {
-        DebugWindow.DebugMessage("UpdatePosStart");
-        
-/*        byte[] posBytes = new byte[sizeof(float) * 3];
+    {        
+        byte[] posBytes = new byte[sizeof(float) * 3];
         //BlockCopy(source, srcStart, dst, destStart, length)
         Buffer.BlockCopy(message, 0, posBytes, 0, sizeof(float) * 3);
         Vector3 pos = Utility.BytesToVector3(posBytes);
-
-        DebugWindow.DebugMessage(pos.ToString());
 
         byte[] nameBytes = new byte[message.Length - posBytes.Length];
         Buffer.BlockCopy(message, posBytes.Length, nameBytes, 0, nameBytes.Length);
         String name = Utility.BytesToString(nameBytes);
 
-        DebugWindow.DebugMessage(name + ": " + pos.ToString());*/
-        DebugWindow.DebugMessage("UpdatePosStop");
+        DebugWindow.DebugMessage("Recv'd " + name + ": " + pos.ToString());
     }
 
     private void UdpListener()

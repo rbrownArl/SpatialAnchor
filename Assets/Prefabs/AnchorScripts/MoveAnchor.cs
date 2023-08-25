@@ -55,6 +55,9 @@ public class MoveAnchor : MonoBehaviour
 
     }
 
+    //When Anchor is grabbed
+    //change color... except it doesnt change on the anchor cuz it is made up up a bunch of different peieces
+    //call the anchor managers moveanchor (remove worldanchor)
     public void Grab()
     {
         gameObject.GetComponent<Renderer>().material = selectedColor;
@@ -62,6 +65,9 @@ public class MoveAnchor : MonoBehaviour
         anchorShareManager.MoveAnchorObject(gameObject);
     }    
 
+    //when the anchor is released
+    //change color back... except it dont work
+    //call the anchor managers lock anchor (add worldanchor, save it, send it)
     public void Release()
     {
         gameObject.GetComponent<Renderer>().material = originalColor;
@@ -69,18 +75,23 @@ public class MoveAnchor : MonoBehaviour
         anchorShareManager.LockAnchorObject(gameObject);
     }
 
+    //we know an anchor exists, but we havent figured out where it is (havent mapped current location to anchor location)
+    //set color based on lost or found
+    //if found show the sphere object   (except dont do it right now)
     private void Anchor_OnTrackingChanged(WorldAnchor self, bool located)
     {
         DebugWindow.DebugMessage((located ? "I found myself at " : "I am lost from ") + gameObject.transform.position.ToString());
         if (located)
         {
+            DebugWindow.DebugMessage("Located, so creating object");
             gameObject.GetComponent<Renderer>().material = originalColor;
-            //GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + ".sphere");
+            GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + ".sphere");
         }
         else
             gameObject.GetComponent<Renderer>().material = lostColor;
     }
 
+    //create a sphere object if we havent already, broadcast the location
     public GameObject CreateOrUpdateObject(GameObject objectPrefab, string gameObjectName)
     {
         GameObject existing = GameObject.Find(gameObjectName);

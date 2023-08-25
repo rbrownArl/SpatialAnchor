@@ -212,9 +212,7 @@ public class AnchorShareManager : MonoBehaviour
                 DebugWindow.DebugMessage("Export Complete " + reason.ToString());
                 DebugWindow.DebugMessage("Sending anchor");
 
-                //tcpConnection.anchorSend = serializedWorldAnchor;
-
-                string path = string.Format("{0}/{1}.bin", Application.persistentDataPath, anchorId + "-serializedTransferAnchor.bin");
+                string path = string.Format("{0}/{1}.bin", Application.persistentDataPath, anchorId + "-serializedTransferAnchor.bin"); //.bin is not needed.
                 File.WriteAllBytes(path, serializedWorldAnchor);
 
                 foreach (string ip in thisNetworkDiscoveryManager.GetIps())
