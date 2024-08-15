@@ -622,7 +622,7 @@ PlayerSettings:
   metroCertificatePassword: 
   metroCertificateSubject: Nope
   metroCertificateIssuer: Nope
-  metroCertificateNotAfter: 0048caf50deada01
+  metroCertificateNotAfter: 002440bd420edc01
   metroApplicationDescription: Trials to serialize anchors
   wsaImages: {}
   metroTileShortName: 

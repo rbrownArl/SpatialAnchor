@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 
 using UnityEngine;
+using System.Net.NetworkInformation;
 
 class Utility
 {
@@ -58,15 +59,55 @@ class Utility
         return text;
     }
 
+    //public static string DisplayUnicastAddresses()
     public static string getMachineIp(string machineName)
+    {
+        string machineIp = "";
+        try
+        {
+            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface adapter in adapters)
+            {
+                DebugWindow.DebugMessage("checking *" + adapter.Description + ":" + adapter.Name + "*");
+                if (adapter.Name.StartsWith("Wi-Fi"))
+                {
+                    IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
+                    IPv4InterfaceProperties ipv4adapterProperties = adapterProperties.GetIPv4Properties();
+                    UnicastIPAddressInformationCollection uniCast = adapterProperties.UnicastAddresses;
+                    if (uniCast.Count > 0)
+                    {
+                        DebugWindow.DebugMessage(adapter.Name);
+                        DebugWindow.DebugMessage(adapter.Description);
+                        foreach (UnicastIPAddressInformation uni in uniCast)
+                        {
+                            DebugWindow.DebugMessage(uni.Address.ToString());
+
+                            if (uni.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                            {
+                                DebugWindow.DebugMessage("Using Ip: " + uni.Address);
+                                machineIp = uni.Address.ToString();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            DebugWindow.DebugMessage("get HostIp error " + e);
+        }
+        return machineIp;
+    }
+
+    public static string getMachineIpX(string machineName)
     {
         string machineIp = "";
         try
         {
             foreach (IPAddress ip in Dns.GetHostAddresses(machineName))
             {
-/*                DebugWindow.DebugMessage(ip.ToString());
-                if (ip.ToString().StartsWith("10"))*/
+                DebugWindow.DebugMessage(ip.ToString());
+                /*if (ip.ToString().StartsWith("10"))*/
                 {
                     machineIp = ip.ToString();
                     DebugWindow.DebugMessage("Using IP: " + machineIp);
