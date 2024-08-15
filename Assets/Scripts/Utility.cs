@@ -59,7 +59,6 @@ class Utility
         return text;
     }
 
-    //public static string DisplayUnicastAddresses()
     public static string getMachineIp(string machineName)
     {
         string machineIp = "";
@@ -68,19 +67,21 @@ class Utility
             NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface adapter in adapters)
             {
-                DebugWindow.DebugMessage("checking *" + adapter.Description + ":" + adapter.Name + "*");
+//                DebugWindow.DebugMessage("checking *" + adapter.Description + ":" + adapter.Name + "*");
                 if (adapter.Name.StartsWith("Wi-Fi"))
                 {
+//                    DebugWindow.DebugMessage(adapter.Name);
+//                    DebugWindow.DebugMessage(adapter.Description);
+
                     IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
-                    IPv4InterfaceProperties ipv4adapterProperties = adapterProperties.GetIPv4Properties();
                     UnicastIPAddressInformationCollection uniCast = adapterProperties.UnicastAddresses;
                     if (uniCast.Count > 0)
                     {
-                        DebugWindow.DebugMessage(adapter.Name);
-                        DebugWindow.DebugMessage(adapter.Description);
+                        DebugWindow.DebugMessage("unicast count: " + uniCast.Count);
                         foreach (UnicastIPAddressInformation uni in uniCast)
                         {
-                            DebugWindow.DebugMessage(uni.Address.ToString());
+//                            IPv4InterfaceProperties ipv4adapterProperties = adapterProperties.GetIPv4Properties();
+//                            DebugWindow.DebugMessage(uni.Address.ToString() + " : " + uni.Address.AddressFamily.ToString());
 
                             if (uni.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                             {
