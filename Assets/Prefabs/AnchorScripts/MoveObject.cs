@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class MoveObject : MonoBehaviour
 {
+    public bool grabbing;
     public Material selectedColor;
     public Material originalColor;
     public Material lostColor;
@@ -16,24 +17,31 @@ public class MoveObject : MonoBehaviour
     // load the sphere's location from player prefs, broadcast the position
     void Start()
     {
-        networkDiscoveryManager = GameObject.Find("NetworkDiscoverManager").GetComponent<NetworkDiscoveryManager>();
+DebugWindow.DebugMessage("Start start: " + gameObject.name);
+        networkDiscoveryManager = GameObject.Find("NetworkDiscoveryManager").GetComponent<NetworkDiscoveryManager>();
 
         //read position
         LoadObject();
-
+DebugWindow.DebugMessage("Loading end");
         //transmit position
         networkDiscoveryManager.BroadcastPosOnce(gameObject);
+DebugWindow.DebugMessage("Start end");
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (grabbing)
+        {
+            // networkDiscoveryManager.BroadcastPosOnce(gameObject);
+        }
     }
 
     //grab the object, change the color
     public void Grab()
     {
+        grabbing = true;
         gameObject.GetComponent<Renderer>().material = selectedColor;
 
     }
@@ -41,6 +49,9 @@ public class MoveObject : MonoBehaviour
     //release the object, change the color, broadcast the new position, write the position to the playerprefs..
     public void Release()
     {
+        grabbing = false;
+        DebugWindow.DebugMessage("release object stat: " + (gameObject != null));
+
         gameObject.GetComponent<Renderer>().material = originalColor;
 
         //transmit position
@@ -48,6 +59,8 @@ public class MoveObject : MonoBehaviour
 
         //save position
         SaveObject();
+        DebugWindow.DebugMessage("release object end");
+
     }
 
     //in theory, if another player moves the sphere, it should tell us
@@ -98,9 +111,9 @@ public class MoveObject : MonoBehaviour
     //read sphere position and rotation from playerprefs, update the game object
     private void LoadObject()
     {
-        DebugWindow.DebugMessage("Loading Prefs: " + anchor.name + ": " + PlayerPrefs.HasKey(anchor.name + ".x"));
+        DebugWindow.DebugMessage("Loading Prefs: " + anchor.name + ": " + PlayerPrefs.HasKey(anchor.name + ".px"));
 
-        if (PlayerPrefs.HasKey(anchor.name + ".x"))
+        if (PlayerPrefs.HasKey(anchor.name + ".px"))
         {
             DebugWindow.DebugMessage("Loaded Prefs");
 
@@ -136,7 +149,7 @@ public class MoveObject : MonoBehaviour
     //get position and rotation relative to the anchor, write to player prefs
     private void SaveObject()
     {
-        DebugWindow.DebugMessage("Saving Prefs: " + anchor.name + ": " + PlayerPrefs.HasKey(anchor.name + ".x"));
+        DebugWindow.DebugMessage("Saving Prefs: " + anchor.name + ": " + PlayerPrefs.HasKey(anchor.name + ".px"));
 
         Color color = gameObject.GetComponent<Renderer>().material.color;
 

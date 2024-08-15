@@ -73,6 +73,8 @@ public class MoveAnchor : MonoBehaviour
         gameObject.GetComponent<Renderer>().material = originalColor;
 
         anchorShareManager.LockAnchorObject(gameObject);
+
+        Anchor_OnTrackingChanged(anchor, anchor.isLocated);
     }
 
     //we know an anchor exists, but we havent figured out where it is (havent mapped current location to anchor location)
@@ -95,14 +97,16 @@ public class MoveAnchor : MonoBehaviour
     public GameObject CreateOrUpdateObject(GameObject objectPrefab, string gameObjectName)
     {
         GameObject existing = GameObject.Find(gameObjectName);
+        DebugWindow.DebugMessage(gameObjectName + " Existing:" + (existing != null));
 
         if (existing == null)
         {
             //instantiate it 0.5m in front of me (regardless of where the anchor is)
-            GameObject objectInst = Instantiate(objectPrefab,initialObjectPosition, anchor.transform.rotation);
+    DebugWindow.DebugMessage("preInst");
+            GameObject objectInst = Instantiate(objectPrefab, initialObjectPosition + anchor.transform.position, anchor.transform.rotation);
             objectInst.name = gameObjectName;
             objectInst.GetComponent<MoveObject>().anchor = this.gameObject;
-
+    DebugWindow.DebugMessage("postInst");
             networkDiscoveryManager.BroadcastPosOnce(objectInst);
 
             return objectInst;

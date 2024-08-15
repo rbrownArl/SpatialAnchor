@@ -324,9 +324,9 @@ MonoBehaviour:
   selectedColor: {fileID: 2100000, guid: 978c13c1492639341a61913375335e64, type: 2}
   originalColor: {fileID: 2100000, guid: 680505b4b4f3400f9fd3ebb242751819, type: 2}
   lostColor: {fileID: 2100000, guid: 67e4ae112f094f3082e033060c3cd298, type: 2}
-  anchorManager: {fileID: 0}
-  objectPrefab: {fileID: 0}
-  initialObjectPosition: {x: 0, y: 0, z: 1}
+  objectPrefab: {fileID: 2296950806847638784, guid: 0218412fa94e2ca4fa13f595cf4d2380,
+    type: 3}
+  initialObjectPosition: {x: 0, y: 0.5, z: 0}
 --- !u!114 &-8022123448826491484
 MonoBehaviour:
   m_ObjectHideFlags: 0
