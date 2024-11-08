@@ -167,7 +167,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   anchorPrefab: {fileID: 4507293094998184498, guid: 55b54fddd1ec42d428581c8c1daacfd1,
     type: 3}
-  objectPrefab: {fileID: 2296950806847638784, guid: 0218412fa94e2ca4fa13f595cf4d2380,
+  objectPrefab: {fileID: 7375594477324142649, guid: 1a4c2b1951ac5cc49bafdc8c0e71b7d1,
     type: 3}
 --- !u!1 &223974226 stripped
 GameObject:

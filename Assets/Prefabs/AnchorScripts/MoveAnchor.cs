@@ -24,21 +24,28 @@ public class MoveAnchor : MonoBehaviour
     private AnchorShareManager anchorShareManager;
     private NetworkDiscoveryManager networkDiscoveryManager;
 
+    private GameObject axisSphere;
+
+    private bool isLocated = false;
     // Start is called before the first frame update
     void Start()
     {
         anchorShareManager = GameObject.Find("AnchorShareManager").GetComponent<AnchorShareManager>();
         networkDiscoveryManager = GameObject.Find("NetworkDiscoveryManager").GetComponent<NetworkDiscoveryManager>();
 
+        axisSphere = GameObject.Find("Sphere");
+
+        anchor = gameObject.GetComponent<WorldAnchor>();
+
+
         if (originalColor == null)
-            originalColor = gameObject.GetComponent<Renderer>().material;
+            originalColor = axisSphere.GetComponent<Renderer>().material;
 
         DebugWindow.DebugMessage("Hi, I am " + name + " at " + gameObject.transform.position);
         
-        anchor = gameObject.GetComponent<WorldAnchor>();
         if (anchor != null)
         {
-            anchor.OnTrackingChanged += Anchor_OnTrackingChanged;
+            //anchor.OnTrackingChanged += Anchor_OnTrackingChanged;
             DebugWindow.DebugMessage(anchor.isLocated ? "I am Located" : "I am NOT Located");
         }
         else
@@ -46,12 +53,17 @@ public class MoveAnchor : MonoBehaviour
             DebugWindow.DebugMessage("I have a null anchor");
         }
 
-        Anchor_OnTrackingChanged(anchor, anchor.isLocated);
+        //Anchor_OnTrackingChanged(anchor, anchor.isLocated);
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!isLocated) 
+        {
+            isLocated = true;
+            AnchorLocated(anchor);
+        }
 
     }
 
@@ -60,7 +72,7 @@ public class MoveAnchor : MonoBehaviour
     //call the anchor managers moveanchor (remove worldanchor)
     public void Grab()
     {
-        gameObject.GetComponent<Renderer>().material = selectedColor;
+        axisSphere.GetComponent<Renderer>().material = selectedColor;
         
         anchorShareManager.MoveAnchorObject(gameObject);
     }    
@@ -70,27 +82,47 @@ public class MoveAnchor : MonoBehaviour
     //call the anchor managers lock anchor (add worldanchor, save it, send it)
     public void Release()
     {
-        gameObject.GetComponent<Renderer>().material = originalColor;
+        axisSphere.GetComponent<Renderer>().material = originalColor;
 
         anchorShareManager.LockAnchorObject(gameObject);
 
-        Anchor_OnTrackingChanged(anchor, anchor.isLocated);
+//        if (anchor != null) 
+//            Anchor_OnTrackingChanged(anchor, anchor.isLocated);
     }
 
     //we know an anchor exists, but we havent figured out where it is (havent mapped current location to anchor location)
     //set color based on lost or found
     //if found show the sphere object   (except dont do it right now)
-    private void Anchor_OnTrackingChanged(WorldAnchor self, bool located)
-    {
-        DebugWindow.DebugMessage((located ? "I found myself at " : "I am lost from ") + gameObject.transform.position.ToString());
-        if (located)
+    /*    private void Anchor_OnTrackingChanged(WorldAnchor self, bool located)
         {
+            DebugWindow.DebugMessage((located ? "I found myself at " : "I am lost from ") + gameObject.transform.position.ToString());
+            if (located)
+            {
+                DebugWindow.DebugMessage("Located, so creating object");
+                axisSphere.GetComponent<Renderer>().material = originalColor;
+                GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + ".sphere");
+            }
+            else
+                axisSphere.GetComponent<Renderer>().material = lostColor;
+        }*/
+
+    private void AnchorLocated(WorldAnchor self)
+    {
+        DebugWindow.DebugMessage((self.isLocated ? "I found myself at " : "I am lost from ") + gameObject.transform.position.ToString());
+#if UNITY_EDITOR
+        if (true)
+#else
+        if (self.isLocated)
+#endif
+        {
+            isLocated = true;
             DebugWindow.DebugMessage("Located, so creating object");
-            gameObject.GetComponent<Renderer>().material = originalColor;
-            GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + ".sphere");
+            axisSphere.GetComponent<Renderer>().material = originalColor;
+            //GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + ".sphere");
+            GameObject objectInst = CreateOrUpdateObject(objectPrefab, this.gameObject.name + "." + objectPrefab.name);
         }
         else
-            gameObject.GetComponent<Renderer>().material = lostColor;
+            axisSphere.GetComponent<Renderer>().material = lostColor;
     }
 
     //create a sphere object if we havent already, broadcast the location

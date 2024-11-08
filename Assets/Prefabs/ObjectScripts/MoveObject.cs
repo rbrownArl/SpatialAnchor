@@ -9,6 +9,7 @@ public class MoveObject : MonoBehaviour
     public Material originalColor;
     public Material lostColor;
 
+    public GameObject prefab;
     public GameObject anchor;
 
     private NetworkDiscoveryManager networkDiscoveryManager;
@@ -21,7 +22,7 @@ DebugWindow.DebugMessage("Start start: " + gameObject.name);
         networkDiscoveryManager = GameObject.Find("NetworkDiscoveryManager").GetComponent<NetworkDiscoveryManager>();
 
         //read position
-        LoadObject();
+        //LoadObject();
 DebugWindow.DebugMessage("Loading end");
         //transmit position
         networkDiscoveryManager.BroadcastPosOnce(gameObject);
@@ -41,18 +42,20 @@ DebugWindow.DebugMessage("Start end");
     //grab the object, change the color
     public void Grab()
     {
+        DebugWindow.DebugMessage("Grabbing " + gameObject.name);
         grabbing = true;
-        gameObject.GetComponent<Renderer>().material = selectedColor;
+        prefab.GetComponent<MeshRenderer>().material = selectedColor;
 
     }
 
     //release the object, change the color, broadcast the new position, write the position to the playerprefs..
     public void Release()
     {
+        DebugWindow.DebugMessage("Releasing " + gameObject.name);
         grabbing = false;
         DebugWindow.DebugMessage("release object stat: " + (gameObject != null));
 
-        gameObject.GetComponent<Renderer>().material = originalColor;
+        prefab.GetComponent<MeshRenderer>().material = originalColor;
 
         //transmit position
         networkDiscoveryManager.BroadcastPosOnce(gameObject);
@@ -78,16 +81,19 @@ DebugWindow.DebugMessage("Start end");
     private void SetPositionRelativeToAnchor(Vector3 devicePosRelativeToAsa, Quaternion deviceRotRelativeToAsa)
     {
         Quaternion asaRotRelativeToWorld = anchor.transform.rotation;
+       DebugWindow.DebugMessage(asaRotRelativeToWorld.ToString());
+
         Quaternion deviceRotRelativeToWorld = deviceRotRelativeToAsa * asaRotRelativeToWorld;
+       DebugWindow.DebugMessage(deviceRotRelativeToAsa.ToString());
 
         Vector3 devicePosRelativeToWorld = anchor.transform.position +
                                            asaRotRelativeToWorld * devicePosRelativeToAsa;
-
+       DebugWindow.DebugMessage(devicePosRelativeToWorld.ToString());
         gameObject.transform.rotation = deviceRotRelativeToWorld;
         gameObject.transform.position = devicePosRelativeToWorld;
 
-        DebugWindow.DebugMessage(anchor.transform.position + "");
-        DebugWindow.DebugMessage(gameObject.transform.position + " : " + devicePosRelativeToAsa);
+       DebugWindow.DebugMessage(anchor.transform.position + "");
+       DebugWindow.DebugMessage(gameObject.transform.position + " : " + devicePosRelativeToAsa);
     }
 
     //get position based on anchor position and orientation
@@ -112,17 +118,16 @@ DebugWindow.DebugMessage("Start end");
     private void LoadObject()
     {
         DebugWindow.DebugMessage("Loading Prefs: " + anchor.name + ": " + PlayerPrefs.HasKey(anchor.name + ".px"));
-
         if (PlayerPrefs.HasKey(anchor.name + ".px"))
         {
-            DebugWindow.DebugMessage("Loaded Prefs");
+
 
             Color color = new Color();
             color.r = float.Parse(PlayerPrefs.GetString(anchor.name + ".cr"));
             color.g = float.Parse(PlayerPrefs.GetString(anchor.name + ".cg"));
             color.b = float.Parse(PlayerPrefs.GetString(anchor.name + ".cb"));
 
-            gameObject.GetComponent<Renderer>().material.color = color;
+            prefab.GetComponent<MeshRenderer>().material.color = color;
 
 
             Vector3 position;
@@ -136,13 +141,11 @@ DebugWindow.DebugMessage("Start end");
             rotation.y = float.Parse( PlayerPrefs.GetString(anchor.name + ".oy") );
             rotation.z = float.Parse( PlayerPrefs.GetString(anchor.name + ".oz") );
 
-            SetPositionRelativeToAnchor(position, rotation);
-
+            //SetPositionRelativeToAnchor(position, rotation);
         }
         else
         {
             DebugWindow.DebugMessage("No Prefs");
-            SaveObject();
         }
     }
 
@@ -151,19 +154,22 @@ DebugWindow.DebugMessage("Start end");
     {
         DebugWindow.DebugMessage("Saving Prefs: " + anchor.name + ": " + PlayerPrefs.HasKey(anchor.name + ".px"));
 
-        Color color = gameObject.GetComponent<Renderer>().material.color;
+        Color color = prefab.GetComponent<MeshRenderer>().material.color;
+        PlayerPrefs.SetString(anchor.name + ".color", color.ToString());
 
         PlayerPrefs.SetString(anchor.name + ".cx", color.r.ToString());
         PlayerPrefs.SetString(anchor.name + ".cy", color.g.ToString());
         PlayerPrefs.SetString(anchor.name + ".cz", color.b.ToString());
 
         Vector3 position = GetPositionRelativeToAnchor();
+        PlayerPrefs.SetString(anchor.name + ".pos", position.ToString());
 
         PlayerPrefs.SetString(anchor.name + ".px", position.x.ToString());
         PlayerPrefs.SetString(anchor.name + ".py", position.y.ToString());
         PlayerPrefs.SetString(anchor.name + ".pz", position.z.ToString());
 
         Quaternion rotation = GetRotationRelativeToAnchor();
+        PlayerPrefs.SetString(anchor.name + ".rotation", rotation.ToString());
 
         PlayerPrefs.SetString(anchor.name + ".ow", rotation.w.ToString());
         PlayerPrefs.SetString(anchor.name + ".ox", rotation.x.ToString());
@@ -172,5 +178,13 @@ DebugWindow.DebugMessage("Start end");
 
         DebugWindow.DebugMessage(anchor.transform.position + "");
         DebugWindow.DebugMessage(transform.position + ":" + position);
+
+        PlayerPrefs.Save();
     }
+
+    private void OnDestroy()
+    {
+        PlayerPrefs.Save();
+    }
+
 }

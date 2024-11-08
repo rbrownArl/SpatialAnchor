@@ -67,12 +67,8 @@ class Utility
             NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface adapter in adapters)
             {
-//                DebugWindow.DebugMessage("checking *" + adapter.Description + ":" + adapter.Name + "*");
                 if (adapter.Name.StartsWith("Wi-Fi"))
                 {
-//                    DebugWindow.DebugMessage(adapter.Name);
-//                    DebugWindow.DebugMessage(adapter.Description);
-
                     IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
                     UnicastIPAddressInformationCollection uniCast = adapterProperties.UnicastAddresses;
                     if (uniCast.Count > 0)
@@ -81,8 +77,6 @@ class Utility
                         foreach (UnicastIPAddressInformation uni in uniCast)
                         {
 //                            IPv4InterfaceProperties ipv4adapterProperties = adapterProperties.GetIPv4Properties();
-//                            DebugWindow.DebugMessage(uni.Address.ToString() + " : " + uni.Address.AddressFamily.ToString());
-
                             if (uni.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                             {
                                 DebugWindow.DebugMessage("Using Ip: " + uni.Address);
@@ -90,28 +84,6 @@ class Utility
                             }
                         }
                     }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            DebugWindow.DebugMessage("get HostIp error " + e);
-        }
-        return machineIp;
-    }
-
-    public static string getMachineIpX(string machineName)
-    {
-        string machineIp = "";
-        try
-        {
-            foreach (IPAddress ip in Dns.GetHostAddresses(machineName))
-            {
-                DebugWindow.DebugMessage(ip.ToString());
-                /*if (ip.ToString().StartsWith("10"))*/
-                {
-                    machineIp = ip.ToString();
-                    DebugWindow.DebugMessage("Using IP: " + machineIp);
                 }
             }
         }

@@ -105,12 +105,15 @@ public class AnchorShareManager : MonoBehaviour
     //On move anchor
     public void LockAnchorObject(GameObject anchoredObject)
     {
+        DebugWindow.DebugMessage("Starting LockAnchorObject");
         //Store updated anchor
         SaveAnchor(anchoredObject);
 
         //Export anchor
         //Broadcast updated anchor
+#if !UNITY_EDITOR
         ExportAnchor(anchoredObject.name, anchoredObject.GetComponent<WorldAnchor>());
+#endif
     }
 
     private void AnchorStoreLoaded(WorldAnchorStore store)
@@ -167,13 +170,14 @@ public class AnchorShareManager : MonoBehaviour
     //Save a named spatial anchor to the store with the unity world anchor
     private void SaveAnchor(GameObject anchoredObject)
     {
+        DebugWindow.DebugMessage("Starting SaveAnchor");
         WorldAnchor anchor = (anchoredObject.GetComponent<WorldAnchor>() == null) ? 
                              anchoredObject.AddComponent<WorldAnchor>() : 
                              anchoredObject.GetComponent<WorldAnchor>();
-        
+
         bool deleted = store.Delete(anchoredObject.name.ToString());
         bool retTrue = store.Save(anchoredObject.name.ToString(), anchor);
-        
+   
         if (!retTrue)
         {
             DebugWindow.DebugMessage("Anchor save failed");
@@ -189,13 +193,12 @@ public class AnchorShareManager : MonoBehaviour
         {
             DestroyImmediate(anchor);
         }
-        DebugWindow.DebugMessage("Ending ClearAnchor");
     }
 
     //Serialize and send WorldAnchor over network
     private void ExportAnchor(string anchorId, WorldAnchor transferAnchor)
     {
-
+        DebugWindow.DebugMessage("Starting ExportANchor");
         byte[] serializedWorldAnchor = new byte[0];
 
         void OnExportDataAvailable(byte[] data)
@@ -212,7 +215,7 @@ public class AnchorShareManager : MonoBehaviour
                 DebugWindow.DebugMessage("Export Complete " + reason.ToString());
                 DebugWindow.DebugMessage("Sending anchor");
 
-                string path = string.Format("{0}/{1}.bin", Application.persistentDataPath, anchorId + "-serializedTransferAnchor.bin"); //.bin is not needed.
+                string path = string.Format("{0}/{1}", Application.persistentDataPath, anchorId + "-serializedTransferAnchor.bin");
                 File.WriteAllBytes(path, serializedWorldAnchor);
 
                 foreach (string ip in thisNetworkDiscoveryManager.GetIps())
@@ -251,6 +254,7 @@ public class AnchorShareManager : MonoBehaviour
     //Read WorldAnchor from network and deserialize it, update anchor
     private void ImportAnchor(byte[] importedData)
     {
+        DebugWindow.DebugMessage("Starting ImportAnchor");
         importState = ImportState.Importing;
         try
         {

@@ -51,6 +51,9 @@ public class DebugWindow : MonoBehaviour
 
     private void Start()
     {
+#if UNITY_EDITOR
+        this.gameObject.transform.position = new Vector3(0.3f,0.1f,0.3f);
+#endif
         // Cache references
         scrollRect = GetComponentInChildren<ScrollRect>();
 
